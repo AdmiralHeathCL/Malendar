@@ -1,0 +1,57 @@
+2024 Sept.
+Roadmap:
+
+    9.11：
+        User/Inclass/Notification Model 完成
+        User Authentication (tested) 完成
+
+    9.12: 
+        User Controller 完成
+        按照教室/教师/班级预览课表
+        老师冲突怎么办？*可视化教室和教师分配*
+        排课：显示哪个Admin用户完成的更改？（和timestamp一起）
+
+Admin：
+
+    Released:
+
+    WIP:
+    添加/修改班级
+    发布课表
+    查看/管理班级列表
+    课程备注
+
+    注册/分发/修改/删除成员账号
+    查看成员列表
+    *修改注册密钥
+
+    Advance:
+    微信登录
+    一键排课 - 自动教室分配（权重：大小，人数，设备，固定教室优先）
+
+Teacher: 
+
+    Released:
+
+    WIP:
+    课程备注
+    看到所在班级
+    收到班级/调课通知
+
+    Advance:
+    微信登录
+
+Student:
+
+    Released:
+
+    WIP:
+    查看所在班级
+    收到班级/调课通知
+
+TI:
+    拖动排版 Chakra->Tables
+
+Notes:
+
+    同时段课程冲突
