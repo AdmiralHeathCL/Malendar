@@ -1,5 +1,6 @@
 import Inclass from "../models/inclass.model.js";
 import User from "../models/user.model.js";
+import Cluster from "../models/cluster.model.js";
 import mongoose from "mongoose";
 
 export const getInclasses = async (req, res) => {
@@ -13,38 +14,50 @@ export const getInclasses = async (req, res) => {
 }
 
 //Create a cluster of students individually?
-export const createclass = async (req, res) => 
+
+// export const createcluster = async (req, res) => {
+//     const inclass = req.body;
+//     const inclassId = req.params.id;
+
+//     const t_Id = req.teachers._id.toString();
+//     const s_Id = req.students._id.toString();
+
+//     const userId = req.user._id.toString();
+//     const user = await User.findById(userId);
+//     if(!user) {
+//         return res.status(404).json({ message: "User not found" });
+//     }
+
+//     const newCluster = new Inclass({
+//         teachers: {t_Id},
+//         students: {s_Id},
+//     });
+
+//     try {
+//         await newCluster.save();
+//         res.status(201).json({ success: true, data: newCluster });
+//     } catch (error) {
+//         console.error("Error in Create cluster:", error.message);
+//         res.status(500).json({ success: false, message: "Server Error" });
+//     }
+// }
 
 export const createInclass = async (req, res) => {
     const inclass = req.body;
+    const codeId = req.classcode._id.toString();
     // const inclassId = req.params.id;
 
-    // const t_Id = req.teachers._id.toString();
-    // const s_Id = req.students._id.toString();
-
-    // const teachers = await User.findById(t_Id);
-    // const students = await User.findById(s_Id);
-
-    const userId = req.user._id.toString();
-    const user = await User.findById(userId);
-    if(!user) {
-        return res.status(404).json({ message: "User not found" });
-    }
-
-    if(!classcode && !type && !time) {
-        return res.status(400).json({ error: "Post must have text or image" });
-    }
-
-    const t_Id = 
-
-    const s_Id = 
-
-    if(!inclass.name || !inclass.type || !inclass.time) {
+    if(!inclass.classcodes || !inclass.type || !inclass.time) {
         return res.status(400).json({ success: false, message: "Please provide all fields" });
     }
 
+    const classcode = await Cluster.findById(codeId);
+    if(!classcode) {
+        return res.status(404).json({ message: "Cluster not found" });
+    }
+
     const newInclass = new Inclass({
-        classcode,
+        classcodes: {codeId},
         type,
         classroom,
         teachers: {t_Id},

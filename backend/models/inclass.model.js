@@ -2,11 +2,14 @@ import mongoose from "mongoose";
 
 const inclassSchema = mongoose.Schema({
 
-    classcode: {
-        type: String,
-        required: true,
-        unique: true
-    },
+    classcodes: [
+        {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Cluster",
+        // required: true,
+        default: []
+        }
+    ],
     type: {
         type: String,
         required: true

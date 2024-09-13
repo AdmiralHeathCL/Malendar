@@ -7,9 +7,17 @@ Roadmap:
 
     9.12: 
         User Controller 完成
+
+        所有学生在CLUSTER里 老师单独加
         按照教室/教师/班级预览课表
         老师冲突怎么办？*可视化教室和教师分配*
         排课：显示哪个Admin用户完成的更改？（和timestamp一起）
+        单节课可以添加单个学生/多个班级
+
+        明天做：
+            User - getallUsers
+            POSTMAN如何输入array？
+
 
 Admin：
 

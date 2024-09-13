@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 // import productRoutes from "./routes/product.route.js";
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
+import clusterRoutes from "./routes/cluster.route.js";
 import inclassRoutes from "./routes/inclass.route.js";
 
 dotenv.config(); //Access .env
@@ -17,9 +18,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// app.use("/api/products", productRoutes);
+// app.use("/api/products", productRoutes);e
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/cluster", clusterRoutes);
 app.use("/api/inclass", inclassRoutes);
 
 app.listen(PORT, () => {

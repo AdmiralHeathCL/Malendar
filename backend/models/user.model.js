@@ -21,6 +21,14 @@ const userSchema = new mongoose.Schema({
         default: "",
     },
 
+    inCluster:[
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Cluster",
+            default: [],
+        }
+    ],
+
     inClass:[
         {
             type: mongoose.Schema.Types.ObjectId,
