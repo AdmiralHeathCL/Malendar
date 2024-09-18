@@ -13,7 +13,7 @@ export const getClusters = async (req, res) => {
 };
 
 export const createCluster = async (req, res) => {
-    const {name} = req.body
+    const {name} = req.body;
     const cluster = req.body;
 
     if(!cluster.name) {

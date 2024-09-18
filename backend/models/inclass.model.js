@@ -6,7 +6,6 @@ const inclassSchema = mongoose.Schema({
         {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Cluster",
-        // required: true,
         default: []
         }
     ],
@@ -36,10 +35,10 @@ const inclassSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    // description: {
-    //     type: String,
-    //     default: ""
-    // }
+    description: {
+        type: String,
+        default: ""
+    }
 
 }, {
     timestamps: true

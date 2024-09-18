@@ -15,6 +15,13 @@ const clusterSchema = mongoose.Schema({
         default: []
         }
     ],
+    inClass: [
+        {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "inclass",
+        default: []  
+        }
+    ]
 }, {
     timestamps: true
 });

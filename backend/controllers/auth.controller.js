@@ -91,3 +91,20 @@ export const getMe = async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" }); 
     }
 }
+
+export const remove = async (req, res) => {
+    try {
+        const user = await User.findByIdAndDelete(req.user._id);
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        res.cookie("jwt", "", { maxAge: 0 });
+
+        res.status(200).json({ message: "账户删除成功" });
+    } catch (error) {
+        console.log("Error in remove controller", error.message);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
