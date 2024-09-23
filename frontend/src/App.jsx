@@ -1,12 +1,13 @@
-import { Button } from "@chakra-ui/react"
+import { Route, Routes } from "react-router-dom"
 
 function App() {
   return (
-    <>
-      <Button>
-        Hello
-      </Button>
-    </>
+		<div className='flex max-w-6xl mx-auto'>
+			<Routes>
+				<Route path='/' element={<HomePage />} />
+				<Route path='/login' element={<LoginPage />} />
+			</Routes>
+		</div>
   )
 }
 

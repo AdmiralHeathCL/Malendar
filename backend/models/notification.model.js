@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+//Example Code
+
 const notificationSchema = new mongoose.Schema({
     from: {
         type: mongoose.Schema.Types.ObjectId,
@@ -26,3 +28,5 @@ const notificationSchema = new mongoose.Schema({
 const Notification = mongoose.model("Notification", notificationSchema);
 
 export default Notification;
+
+//Example Code

@@ -33,10 +33,20 @@ Roadmap:
         User - get all/admins/teachers/students (TESTED) 完成
         Auth - Remove account (TESTED) 完成
         Teacher/Admin Account => User.usertype
+        *Notification 先不做
 
         Remove code required?
         找回密码
+        要不要在USER里做get inclasses和get clusters
+
+    后端一阶段 完工
         
+    9.19：
+        参考UW FLOW
+        Send Notification to Email/Wechat?
+        空格自动缩进 （ECE190 = ECE 190)
+        
+
         
 
 
