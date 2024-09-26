@@ -44,8 +44,21 @@ Roadmap:
     9.19：
         参考UW FLOW
         Send Notification to Email/Wechat?
-        空格自动缩进 （ECE190 = ECE 190)
+        空格自动缩进 ECE190 = ECE 190
         
+    9.23:
+        UI DESIGN Complete
+        还是应该做Signuppage Homepage做外宣
+
+    9.24：
+        Google Fonts in HTML
+        Theme: 蓝金？
+        注册账号时填的是中文姓名 导入到数据库是否会自动变成英文？重名需自动加编号 （待做）
+        email改verification
+        Drag&Drop https://codepen.io/MiguelFaria/pen/VwZJyoe?css-preprocessor=stylus
+
+    9.25:
+        Admin 添加班级到常用组
 
         
 
