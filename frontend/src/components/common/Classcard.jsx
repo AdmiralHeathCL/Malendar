@@ -1,6 +1,14 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const Classcard = ({ title, imageUrl }) => {
+const Classcard = ({ title, imageUrl, classId }) => {
+  const navigate = useNavigate();
+
+  const handleEnterClass = () => {
+    // Navigate to the class route based on classId
+    navigate(`/myclass/${classId}`);
+  };
+
   return (
     <div className="card bg-base-100 w-40 shadow-md m-2">
       <figure>
@@ -10,7 +18,9 @@ const Classcard = ({ title, imageUrl }) => {
         <h2 className="card-title text-sm">{title}</h2>
         <p>TEST</p>
         <div className="card-actions justify-end">
-          <button className="btn btn-primary btn-sm">进入班级</button>
+          <button className="btn btn-primary btn-sm" onClick={handleEnterClass}>
+            进入班级
+          </button>
         </div>
       </div>
     </div>
@@ -18,3 +28,5 @@ const Classcard = ({ title, imageUrl }) => {
 };
 
 export default Classcard;
+
+

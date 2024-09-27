@@ -38,17 +38,6 @@ const SignUpPage = () => {
 					<h1 className='text-4xl font-extrabold text-white'>{"加入"} 玛尔兹。</h1>
 					
 					<div className='flex gap-4 flex-wrap'>
-						{/* <label className='input input-bordered rounded flex items-center gap-2 flex-1'>
-							<FaUser />
-							<input
-								type='text'
-								className='grow '
-								placeholder='用户名'
-								name='username'
-								onChange={handleInputChange}
-								value={formData.username}
-							/>
-						</label> */}
 						<label className='input input-bordered rounded flex items-center gap-2 flex-1'>
 							<FaUser />
 							<input

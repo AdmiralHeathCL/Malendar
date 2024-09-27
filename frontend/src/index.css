@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* styles.css or your main CSS file */
+body.overflow-hidden {
+    overflow: hidden; /* Prevents scroll */
+}
+
+.navbar {
+    transition: padding-right 0.3s ease; /* Smooth transition for padding */
+}
+  
+.drawer-open .navbar {
+    padding-right: 15px; /* Space for the scrollbar */
+}
