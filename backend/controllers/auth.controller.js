@@ -4,7 +4,11 @@ import bcrypt from "bcryptjs";
 
 export const signup = async (req, res) => {
     try {
-        const {username, usertype, password} = req.body;
+        const {username, password} = req.body;
+
+        if (!username || !password) {
+            return res.status(400).json({ error: "请提供用户名和密码" });
+        }
 
         const existingUser = await User.findOne({ username });
         if(existingUser) {
@@ -14,14 +18,12 @@ export const signup = async (req, res) => {
         if(password.length < 6) {
             return res.status(400).json({ error: "密码最短为6个字符" });
         }
-        // Add restrictions to isAdmin and isTeacher
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const newUser = new User({
             username,
-            usertype,
             password:hashedPassword,
         })
 

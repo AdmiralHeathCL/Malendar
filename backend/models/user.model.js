@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema({
     usertype:{
         type: String,
-        required: true,
+        default: "isStudent",
     },
     // isAdmin isTeacher isStudent
     username:{
