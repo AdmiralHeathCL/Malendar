@@ -5,7 +5,7 @@ const HomePage = () => {
 
 	return (
     <div className="w-full">
-      <Navbar />
+      <h1>HomePage</h1>
     </div>
 	);
 };

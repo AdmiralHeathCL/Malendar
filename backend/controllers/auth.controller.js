@@ -7,7 +7,7 @@ export const signup = async (req, res) => {
         const {username, password} = req.body;
 
         if (!username || !password) {
-            return res.status(400).json({ error: "请提供用户名和密码" });
+            return res.status(400).json({ error: "请提供所有信息" });
         }
 
         const existingUser = await User.findOne({ username });

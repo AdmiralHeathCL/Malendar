@@ -1,7 +1,40 @@
 import React, { useEffect } from 'react';
 import { Link, useLocation } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+
+
 
 const Navbar = () => {
+
+  const queryClient = useQueryClient();
+
+	const { mutate: logout } = useMutation({
+		mutationFn: async() => {
+			try {
+				const res = await fetch("/api/auth/logout", {
+					method: "POST",
+				})
+				const data = await res.json();
+
+				if(!res.ok) {
+					throw new Error(data.error || "出错啦~");
+				}
+			} catch (error) {
+				throw new Error(error);
+			}
+		},
+		onSuccess: () => {
+			toast.success("注销成功");
+			queryClient.invalidateQueries({ queryKey: ["authUser"] })
+		},
+		onError: () => {
+			toast.error("Logout failed");
+		},
+	});
+
+	const { data: authUser} = useQuery({queryKey: ["authUser"]});
+
   const location = useLocation(); // Get the current location (path)
 
   const handlePageClick = (path) => {
@@ -51,7 +84,7 @@ const Navbar = () => {
       </div>
 
       <div className="flex-1">
-        <Link to='/'><a className="btn btn-ghost text-xl">Martz</a></Link>
+        <Link to='/'><a className="btn btn-ghost text-2xl font-extrabold">Martz</a></Link>
       </div>
 
       <div className="flex gap-1">
@@ -99,7 +132,10 @@ const Navbar = () => {
           </summary>
           <ul className="menu dropdown-content bg-base-100 rounded-box z-[1] w-36 p-2 shadow">
             <li><a>我的账户</a></li>
-            <li><Link to="/login">登出</Link></li>
+            <li><Link to="/login" onClick={(e) => {
+									e.preventDefault();
+									logout();
+								}}>登出</Link></li>
           </ul>
         </details>
       </div>
@@ -121,7 +157,7 @@ const Navbar = () => {
           </li>
           <li>
             <Link to="/page3" onClick={() => handlePageClick('/page3')}>
-              Page3
+              所有班级
             </Link>
           </li>
         </ul>

@@ -1,6 +1,5 @@
 import React from 'react';
 import Classcard from '../../components/common/Classcard';
-import Navbar from '../../components/common/Navbar';
 
 const MyclassPage = () => {
   // Sample data for classes
@@ -12,14 +11,13 @@ const MyclassPage = () => {
 
   return (
     <div className="w-full">
-      <Navbar />
       <div className="flex flex-wrap p-4"> 
         {classes.map((classItem) => (
           <Classcard 
             key={classItem.id} 
             title={classItem.title} 
             imageUrl={classItem.imageUrl} 
-            classId={classItem.id} // Pass the classId
+            classId={classItem.id}
           />
         ))}
       </div>

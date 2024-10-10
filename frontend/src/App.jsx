@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/home/HomePage";
 import LoginPage from "./pages/auth/login/LoginPage";
 import SignUpPage from "./pages/auth/signup/SignUpPage";
@@ -6,22 +6,54 @@ import CalendarPage from "./pages/calendar/CalendarPage";
 import AdminCalendarPage from "./pages/calendar/AdminCalendarPage";
 import MyclassPage from "./pages/myclass/MyclassPage";
 import ClassDetailPage from "./pages/myclass/ClassdetailPage";
+import Navbar from "./components/common/Navbar";
+
 import { Toaster } from "react-hot-toast";
-// import Navbar from "./components/common/Navbar";
+import { useQuery } from "@tanstack/react-query";
 
 function App() {
+
+  const { data: authUser , isLoading } = useQuery({
+    queryKey: ['authUser'],
+    queryFn: async() => {
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+        if(data.error) return null;
+        if(!res.ok) {
+          throw new Error(data.error || "Something went wrong");
+        }
+        console.log("authUser is here:", data);
+        return data;
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+    retry: false,
+  });
+
+  if(isLoading) {
+    return (
+      <div className='h-screen flex justify-center items-center'>
+        <span className="loading loading-spinner loading-md"></span>
+      </div>
+    );
+  }
+
   return (
-    <div className='flex max-w-6xl mx-auto'>
-      {/* <Navbar /> */}
-      <Routes>
-        <Route path='/' element={<HomePage />} />
-        <Route path='/calendar' element={<CalendarPage />} />
-        <Route path='/myclass' element={<MyclassPage />} />
-        <Route path='/myclass/:id' element={<ClassDetailPage />} />
-        <Route path='/login' element={<LoginPage />} />
-        <Route path='/signup' element={<SignUpPage />} />
-      </Routes>
-      <Toaster />
+    <div>
+      {authUser && <Navbar className="w-full fixed top-0 left-0" />} 
+      <div className='flex w-full mx-auto'>
+        <Routes>
+          <Route path='/' element={authUser ? <HomePage /> : <Navigate to = "/login" />} />
+          <Route path='/calendar' element={authUser ? <CalendarPage /> : <Navigate to = "/login" />} />
+          <Route path='/myclass' element={authUser ? <MyclassPage /> : <Navigate to = "/login" />} />
+          <Route path='/myclass/:id' element={authUser ? <ClassDetailPage /> : <Navigate to = "/login" />} />
+          <Route path='/signup' element={!authUser ? <SignUpPage /> : <Navigate to = "/" />} />
+          <Route path='/login' element={!authUser ? <LoginPage /> : <Navigate to = "/" />} />
+        </Routes>
+        <Toaster />
+      </div>
     </div>
   );
 }

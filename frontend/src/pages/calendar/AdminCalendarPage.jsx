@@ -30,7 +30,6 @@ const AdminCalendarPage = () => {
 
   return (
     <div className="w-full">
-      <Navbar /> {/* Add Navbar at the top */}
 
       <div className="flex flex-col lg:flex-row mt-10">
         {/* Draggable Events */}
