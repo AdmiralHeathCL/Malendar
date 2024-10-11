@@ -12,6 +12,22 @@ export const getClusters = async (req, res) => {
     }
 };
 
+export const getClusterById = async (req, res) => {
+    const { id } = req.params;
+  
+    try {
+      const cluster = await Cluster.findById(id);
+      if (!cluster) {
+        return res.status(404).json({ success: false, message: 'Class not found' });
+      }
+  
+      res.status(200).json({ success: true, data: cluster });
+    } catch (error) {
+      console.error("Error in fetching class:", error.message);
+      res.status(500).json({ success: false, message: 'Server Error' });
+    }
+  };
+
 export const createCluster = async (req, res) => {
     const {name} = req.body;
     const cluster = req.body;

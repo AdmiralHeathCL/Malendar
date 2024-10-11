@@ -14,3 +14,74 @@ body.overflow-hidden {
 .drawer-open .navbar {
     padding-right: 15px; /* Space for the scrollbar */
 }
+
+/* Custom event colors based on type */
+.event-reading {
+    background-color: #c9672a; 
+    border-color: #c9672a;
+    color: white;
+  }
+  
+  .event-listening {
+    background-color: #cfa708; 
+    border-color: #cfa708;
+    color: white;
+  }
+  
+  .event-writing {
+    background-color: #239c3f;
+    border-color: #239c3f;
+    color: white;
+  }
+  
+  .event-speaking {
+    background-color: #348bd2; 
+    border-color: #348bd2;
+    color: white;
+  }
+  
+  .event-default {
+    background-color: #9e9e9e; /* Gray */
+    border-color: #9e9e9e;
+    color: white;
+  }
+
+.fc-daygrid-day-frame, 
+.fc-day {
+    background-color: rgb(68, 139, 184) !important;
+    border-color: #ffffff !important;
+}
+  
+.fc .fc-col-header-cell,
+.fc .fc-day-header {
+    font-size: 1.2rem !important;
+    font-weight: bold;
+}
+
+.fc .fc-daygrid-day-number {
+    font-size: 1rem !important;
+    font-weight: bold;
+    padding-top: 5px;
+}
+
+.event-custom-content {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .event-custom-content div {
+    white-space: nowrap;        /* Prevent text from wrapping */
+    overflow: hidden;           /* Hide overflowing text */
+    text-overflow: ellipsis;    /* Display ellipsis for overflowing text */
+    max-width: 100%;            /* Ensure it doesn't go beyond the container */
+    box-sizing: border-box;     /* Include padding and borders in width */
+  }
+  
+  .fc-event {
+    overflow: hidden !important;   /* Prevent overflow */
+    text-overflow: ellipsis !important; /* Add ellipsis if needed */
+    word-wrap: break-word !important; /* Avoid breaking words */
+    white-space: nowrap; /* Force text to stay on one line */
+  }
+  

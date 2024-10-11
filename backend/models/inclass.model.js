@@ -31,7 +31,15 @@ const inclassSchema = mongoose.Schema({
         default: []
         }
     ],
-    time: {
+    date: {
+        type: String,
+        required: true
+    },
+    starttime: {
+        type: String,
+        required: true
+    },
+    endtime: {
         type: String,
         required: true
     },

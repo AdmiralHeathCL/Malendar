@@ -3,6 +3,22 @@ import User from "../models/user.model.js";
 import Cluster from "../models/cluster.model.js";
 import mongoose from "mongoose";
 
+export const getInClassByCluster = async (req, res) => {
+    const { clusterId } = req.params;
+  
+    try {
+      const inClassItems = await Inclass.find({ classcodes: clusterId });
+      if (!inClassItems || inClassItems.length === 0) {
+        return res.status(200).json({ success: true, data: [] }); // Return an empty array instead of 404
+      }
+  
+      res.status(200).json({ success: true, data: inClassItems });
+    } catch (error) {
+      console.error('Error fetching in-class items:', error.message);
+      res.status(500).json({ success: false, message: 'Server Error' });
+    }
+  };
+
 export const getInclasses = async (req, res) => {
     try {
         // const inclasses = await Inclass({});
@@ -17,7 +33,7 @@ export const getInclasses = async (req, res) => {
 export const createInclass = async (req, res) => {
     const inclass = req.body;
 
-    if(!inclass.type || !inclass.time) {
+    if(!inclass.date || !inclass.starttime || !inclass.endtime) {
         return res.status(400).json({ success: false, message: "Please provide all fields" });
     }
 
@@ -119,18 +135,3 @@ export const deleteInclass = async (req, res) => {
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
-
-// export const deleteInclass = async (req, res) => {
-//     const { id } = req.params;
-
-//     if(!mongoose.Types.ObjectId.isValid(id)) {
-//         return es.status(404).json({ success: false, message: "Class not found" });
-//     }
-    
-//     try {
-//         await Class.findByIdAndDelete(id);
-//         res.status(200).json({ success: true, message: "Class deleted" });
-//     } catch (error) {
-//         res.status(500).json({ success: false, message: "Server Error" });
-//     }
-// };

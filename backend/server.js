@@ -21,8 +21,8 @@ app.use(cookieParser());
 // app.use("/api/products", productRoutes);e
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/cluster", clusterRoutes);
-app.use("/api/inclass", inclassRoutes);
+app.use("/api/clusters", clusterRoutes);
+app.use("/api/inclasses", inclassRoutes);
 
 app.listen(PORT, () => {
     connectDB();
