@@ -48,7 +48,7 @@ body.overflow-hidden {
 
 .fc-daygrid-day-frame, 
 .fc-day {
-    background-color: rgb(68, 139, 184) !important;
+    background-color: rgb(51, 140, 195) !important;
     border-color: #ffffff !important;
 }
   
@@ -83,5 +83,11 @@ body.overflow-hidden {
     text-overflow: ellipsis !important; /* Add ellipsis if needed */
     word-wrap: break-word !important; /* Avoid breaking words */
     white-space: nowrap; /* Force text to stay on one line */
+  }
+
+  .fc-day-today {
+    border: 2px solid #c69109 !important;
+    box-sizing: border-box;
+    color: #c69109;
   }
   

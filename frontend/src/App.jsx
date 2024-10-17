@@ -6,7 +6,9 @@ import CalendarPage from "./pages/calendar/CalendarPage";
 import AdminCalendarPage from "./pages/calendar/AdminCalendarPage";
 import MyclassPage from "./pages/myclass/MyclassPage";
 import ClassDetailPage from "./pages/myclass/ClassdetailPage";
+import ManageClassPage from "./pages/admin/ManageClassPage";
 import Navbar from "./components/common/Navbar";
+import AdminRoute from "./pages/admin/AdminRoute";
 
 import { Toaster } from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -45,12 +47,19 @@ function App() {
       {authUser && <Navbar className="w-full fixed top-0 left-0" />} 
       <div className='flex w-full mx-auto'>
         <Routes>
-          <Route path='/' element={authUser ? <HomePage /> : <Navigate to = "/login" />} />
-          <Route path='/calendar' element={authUser ? <CalendarPage /> : <Navigate to = "/login" />} />
-          <Route path='/myclass' element={authUser ? <MyclassPage /> : <Navigate to = "/login" />} />
-          <Route path='/myclass/:id' element={authUser ? <ClassDetailPage /> : <Navigate to = "/login" />} />
-          <Route path='/signup' element={!authUser ? <SignUpPage /> : <Navigate to = "/" />} />
-          <Route path='/login' element={!authUser ? <LoginPage /> : <Navigate to = "/" />} />
+          <Route path='/' element={authUser ? <HomePage /> : <Navigate to="/login" />} />
+          <Route path='/calendar' element={authUser ? <CalendarPage /> : <Navigate to="/login" />} />
+          <Route path='/myclass' element={authUser ? <MyclassPage /> : <Navigate to="/login" />} />
+          <Route path='/myclass/:id' element={authUser ? <ClassDetailPage /> : <Navigate to="/login" />} />
+          
+          <Route path='/manage' element={
+            <AdminRoute authUser={authUser}>
+              <AdminCalendarPage />
+            </AdminRoute>
+          } />
+
+          <Route path='/signup' element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
+          <Route path='/login' element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
         </Routes>
         <Toaster />
       </div>

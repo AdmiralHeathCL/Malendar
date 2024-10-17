@@ -3,43 +3,38 @@ import { Link, useLocation } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
-
-
 const Navbar = () => {
-
   const queryClient = useQueryClient();
 
-	const { mutate: logout } = useMutation({
-		mutationFn: async() => {
-			try {
-				const res = await fetch("/api/auth/logout", {
-					method: "POST",
-				})
-				const data = await res.json();
+  const { mutate: logout } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch("/api/auth/logout", {
+          method: "POST",
+        });
+        const data = await res.json();
 
-				if(!res.ok) {
-					throw new Error(data.error || "出错啦~");
-				}
-			} catch (error) {
-				throw new Error(error);
-			}
-		},
-		onSuccess: () => {
-			toast.success("注销成功");
-			queryClient.invalidateQueries({ queryKey: ["authUser"] })
-		},
-		onError: () => {
-			toast.error("Logout failed");
-		},
-	});
+        if (!res.ok) {
+          throw new Error(data.error || "出错啦~");
+        }
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+    onSuccess: () => {
+      toast.success("注销成功");
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+    },
+    onError: () => {
+      toast.error("Logout failed");
+    },
+  });
 
-	const { data: authUser} = useQuery({queryKey: ["authUser"]});
-
+  const { data: authUser } = useQuery({ queryKey: ["authUser"] });
   const location = useLocation(); // Get the current location (path)
 
   const handlePageClick = (path) => {
     if (location.pathname === path) {
-      // If the clicked page is the current page, reload the page
       window.location.reload();
     }
   };
@@ -57,7 +52,6 @@ const Navbar = () => {
 
     drawerInput.addEventListener("change", handleDrawerChange);
 
-    // Cleanup event listener
     return () => {
       drawerInput.removeEventListener("change", handleDrawerChange);
     };
@@ -83,8 +77,25 @@ const Navbar = () => {
         </label>
       </div>
 
-      <div className="flex-1">
-        <Link to='/'><a className="btn btn-ghost text-2xl font-extrabold">Martz</a></Link>
+      <div className="flex-1 flex items-center">
+        <Link to='/'>
+          <a className="btn btn-ghost text-2xl font-extrabold">Martz</a>
+        </Link>
+        {authUser?.usertype === "isAdmin" && (
+          <span className="ml-0 px-2 py-0.5 rounded bg-yellow-600 text-white text-[0.75rem] font-semibold">
+            管理员
+          </span>
+        )}
+        {authUser?.usertype === "isTeacher" && (
+          <span className="ml-0 px-2 py-0.5 rounded text-white text-[0.75rem] font-semibold" style={{ backgroundColor: '#348bd2' }}>
+            教师
+          </span>
+        )}
+        {authUser?.usertype === "isStudent" && (
+          <span className="ml-0 px-2 py-0.5 rounded text-white text-[0.75rem] font-semibold" style={{ backgroundColor: '#348bd2' }}>
+            学员
+          </span>
+        )}
       </div>
 
       <div className="flex gap-1">
@@ -144,7 +155,6 @@ const Navbar = () => {
       <div className="drawer-side z-50">
         <label htmlFor="my-drawer" className="drawer-overlay" style={{ zIndex: 50 }}></label>
         <ul className="menu bg-base-200 text-base-content min-h-full w-40 p-4" style={{ zIndex: 50 }}>
-          {/* Drawer content */}
           <li>
             <Link to="/myclass" onClick={() => handlePageClick('/myclass')}>
               我的班级
@@ -160,6 +170,14 @@ const Navbar = () => {
               所有班级
             </Link>
           </li>
+
+          {authUser?.usertype === "isAdmin" && (
+            <li>
+              <Link to="/manage" onClick={() => handlePageClick('/manage')}>
+                管理班级
+              </Link>
+            </li>
+          )}
         </ul>
       </div>
     </div>
@@ -167,6 +185,7 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
 
 
 
