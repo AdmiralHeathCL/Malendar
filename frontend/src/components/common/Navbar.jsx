@@ -174,7 +174,7 @@ const Navbar = () => {
           {authUser?.usertype === "isAdmin" && (
             <li>
               <Link to="/manage" onClick={() => handlePageClick('/manage')}>
-                管理班级
+                课程安排
               </Link>
             </li>
           )}

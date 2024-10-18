@@ -32,37 +32,37 @@ export const getInclasses = async (req, res) => {
 
 export const createInclass = async (req, res) => {
     const inclass = req.body;
-
-    if(!inclass.date || !inclass.starttime || !inclass.endtime) {
-        return res.status(400).json({ success: false, message: "Please provide all fields" });
+  
+    // Check if required fields are missing
+    if (!inclass.date || !inclass.starttime || !inclass.endtime) {
+      console.log("Missing required fields:", {
+        date: inclass.date,
+        starttime: inclass.starttime,
+        endtime: inclass.endtime,
+      });
+      return res.status(400).json({ success: false, message: "Please provide all required fields" });
     }
-
-    const newInclass = new Inclass(inclass);
-
+  
+    // Log incoming request data for debugging
+    console.log("Received inclass data:", inclass);
+  
     try {
-        await newInclass.save();
-
-        if (inclass.classcodes && inclass.classcodes.length > 0) {
-            await Cluster.updateMany(
-                { _id: { $in: inclass.classcodes } },  
-                { $addToSet: { inClass: newInclass._id } } 
-            );
-        };
-
-        if (inclass.students && inclass.students.length > 0) {
-            await User.updateMany(
-                { _id: { $in: inclass.students } },  
-                { $addToSet: { inClass: newInclass._id } } 
-            );
-        };
-
-        res.status(201).json({ success: true, data: newInclass });
+      const newInclass = new Inclass(inclass);
+      await newInclass.save();
+  
+      // Logging successful save
+      console.log("Class created successfully:", newInclass);
+  
+      res.status(201).json({ success: true, data: newInclass });
     } catch (error) {
-        console.error("Error in Create class:", error.message);
-        res.status(500).json({ success: false, message: "Server Error" });
+      // Log error details to help understand the failure
+      console.error("Error creating in-class record:", error.message, error);
+  
+      res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
-};
-
+  };
+  
+  
 export const updateInclass = async (req, res) => {
     const { id } = req.params;
 
@@ -135,3 +135,17 @@ export const deleteInclass = async (req, res) => {
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
+
+export const getInClassByDate = async (req, res) => {
+    const { date } = req.params;
+    try {
+      const inClasses = await Inclass.find({ date: date });
+      if (!inClasses || inClasses.length === 0) {
+        return res.status(200).json({ success: true, data: [] });
+      }
+      res.status(200).json({ success: true, data: inClasses });
+    } catch (error) {
+      console.error("Error fetching classes by date:", error.message);
+      res.status(500).json({ success: false, message: "Server Error" });
+    }
+  };

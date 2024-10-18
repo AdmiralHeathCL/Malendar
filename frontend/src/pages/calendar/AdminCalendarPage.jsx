@@ -1,194 +1,331 @@
-import React, { useRef, useState, useEffect } from "react";
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
+import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 const AdminCalendarPage = () => {
-  const calendarRef = useRef(null);
-  const [classData, setClassData] = useState({});
-  const [currentViewDate, setCurrentViewDate] = useState(""); // State to track the date in the current view
-  const [newClass, setNewClass] = useState({
+  // Ensure default values are strings (not undefined)
+  const defaultClass = {
     classroom: "",
     className: "",
     content: "",
     teacher: "",
     startTime: "",
     endTime: "",
-  });
+    type: "", // Ensure this is `type` not `courseType`
+  };
 
+  const [classes, setClasses] = useState([{ ...defaultClass }]);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [teachers, setTeachers] = useState([]);
+  const [clusters, setClusters] = useState([]);
+
+  // Fetch teachers
   useEffect(() => {
-    // Set the initial date based on the current view in the calendar
-    const calendarApi = calendarRef.current.getApi();
-    setCurrentViewDate(calendarApi.getDate().toISOString().split("T")[0]);
+    const fetchTeachers = async () => {
+      try {
+        const res = await fetch("/api/users/teachers");
+        const data = await res.json();
+        if (res.ok && data && data.data) {
+          setTeachers(data.data);
+        } else {
+          toast.error("Failed to fetch teachers");
+        }
+      } catch (error) {
+        console.error("Error fetching teachers:", error.message);
+        toast.error("Error fetching teachers");
+      }
+    };
+
+    fetchTeachers();
   }, []);
 
-  const handleDatesSet = (arg) => {
-    // Update the current date whenever the view changes
-    setCurrentViewDate(arg.startStr.split("T")[0]);
+  // Fetch clusters
+  useEffect(() => {
+    const fetchClusters = async () => {
+      try {
+        const res = await fetch("/api/clusters");
+        const data = await res.json();
+        if (res.ok && data && data.data) {
+          setClusters(data.data); 
+        } else {
+          toast.error("Failed to fetch clusters");
+        }
+      } catch (error) {
+        console.error("Error fetching clusters:", error.message);
+        toast.error("Error fetching clusters");
+      }
+    };
+
+    fetchClusters();
+  }, []);
+
+  // Fetch in-classes by selected date
+  useEffect(() => {
+    const fetchClassesForDate = async () => {
+      try {
+        const res = await fetch(`/api/inclasses/date/${selectedDate.replace(/-/g, "")}`);
+        const data = await res.json();
+        if (res.ok && data && data.data) {
+          setClasses(data.data.length ? data.data : [{ ...defaultClass }]);
+        } else {
+          toast.error("Failed to fetch classes for the selected date");
+        }
+      } catch (error) {
+        console.error("Error fetching classes:", error.message);
+        toast.error("Error fetching classes");
+      }
+    };
+
+    fetchClassesForDate();
+  }, [selectedDate]);
+
+  const handleInputChange = (index, field, value) => {
+    const updatedClasses = [...classes];
+    updatedClasses[index][field] = value || ""; // Default to an empty string
+
+    if (field === "startTime") {
+      const startTime = value;
+      const endTime = updatedClasses[index].endTime;
+
+      if (!endTime) {
+        const [hours, minutes] = startTime.split(":");
+        const defaultEndTime = `${String(Number(hours) + 2).padStart(2, "0")}${minutes}`;
+        updatedClasses[index].endTime = defaultEndTime;
+      } else if (endTime <= startTime) {
+        toast.error("End time cannot be earlier than start time");
+        updatedClasses[index].endTime = "";
+      }
+    }
+
+    if (field === "endTime") {
+      const startTime = updatedClasses[index].startTime;
+      if (value <= startTime) {
+        toast.error("End time cannot be earlier than start time");
+        updatedClasses[index].endTime = "";
+      } else {
+        updatedClasses[index].endTime = value;
+      }
+    }
+
+    setClasses(updatedClasses);
   };
 
-  const handleInputChange = (e) => {
-    setNewClass({ ...newClass, [e.target.name]: e.target.value });
+  const handleAddClass = async () => {
+    const lastClass = classes[classes.length - 1];
+  
+    if (lastClass.className && lastClass.startTime && lastClass.endTime) {
+      try {
+        // Prepare class data for sending to the backend in HH:mm format
+        const newClass = {
+          classroom: lastClass.classroom,
+          classcodes: [lastClass.className], // Assuming this is the cluster ID
+          description: lastClass.content,
+          teachers: [lastClass.teacher], // Assuming this is the teacher ID
+          starttime: lastClass.startTime, // Use HH:mm format directly
+          endtime: lastClass.endTime, // Use HH:mm format directly
+          date: selectedDate.replace(/-/g, ""), // Ensure date format
+          type: lastClass.type,
+        };
+  
+        const res = await fetch("/api/inclasses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newClass),
+        });
+  
+        const data = await res.json();
+  
+        if (res.ok) {
+          toast.success("Class added successfully");
+  
+          // Add the new class to the frontend state
+          setClasses([...classes, { ...defaultClass }]);
+        } else {
+          console.error("Error from server:", data);
+          toast.error(`Failed to add class: ${data.message}`);
+        }
+      } catch (error) {
+        console.error("Error adding class:", error.message);
+        toast.error("Error adding class");
+      }
+    } else {
+      toast.error("Please fill all required fields");
+    }
   };
+  
+  
 
-  const handleAddClass = () => {
-    if (!newClass.startTime) return;
+  const handleDeleteClass = async (index, classId) => {
+    try {
+      if (classId) {
+        const res = await fetch(`/api/inclasses/${classId}`, { method: "DELETE" });
+        const data = await res.json();
+        if (res.ok) {
+          toast.success("Class deleted successfully");
+        } else {
+          toast.error("Failed to delete class");
+          return;
+        }
+      }
 
-    const start = `${currentViewDate}T${newClass.startTime}`;
-    const end = newClass.endTime
-      ? `${currentViewDate}T${newClass.endTime}`
-      : `${currentViewDate}T${String(Number(newClass.startTime.split(":")[0]) + 2).padStart(2, "0")}:${newClass.startTime.split(":")[1]}`;
-
-    setClassData((prevData) => {
-      const existingClasses = prevData[start] || [];
-      return {
-        ...prevData,
-        [start]: [...existingClasses, { ...newClass, start, end }],
-      };
-    });
-
-    // Reset the input fields
-    setNewClass({
-      classroom: "",
-      className: "",
-      content: "",
-      teacher: "",
-      startTime: "",
-      endTime: "",
-    });
+      if (classes.length > 1) {
+        const updatedClasses = [...classes];
+        updatedClasses.splice(index, 1);
+        setClasses(updatedClasses);
+      }
+    } catch (error) {
+      toast.error("Error deleting class");
+    }
   };
 
   return (
-    <div className="w-full">
-      <div className="flex flex-col lg:flex-row mt-10">
-        {/* Form for adding new class data */}
-        <div className="w-full lg:w-1/4 p-5 bg-base-200 rounded shadow-md">
-          <p className="text-lg font-bold mb-4">Add Class</p>
+    <div className="p-5">
+      <h1 className="text-2xl font-bold mb-4">课程安排</h1>
+      <div className="mb-4">
+        <label className="block text-lg font-medium mb-2">Select Date:</label>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="input input-bordered w-full lg:w-1/4"
+        />
+      </div>
 
-          <select
-            name="classroom"
-            value={newClass.classroom}
-            onChange={handleInputChange}
-            className="select select-bordered w-full mb-2"
-          >
-            <option value="" disabled>Select Classroom</option>
-            <option value="VIP1">VIP1</option>
-            <option value="VIP2">VIP2</option>
-            <option value="VIP3">VIP3</option>
-            {/* Add more classrooms as needed */}
-          </select>
+      <div className="overflow-x-auto bg-base-100 rounded-lg shadow-lg p-5" style={{ backgroundColor: "rgb(51, 140, 195)" }}>
+        <table className="min-w-full ">
+          <thead>
+            <tr>
+              <th className="px-4 py-2 border">上课时间</th>
+              <th className="px-4 py-2 border">下课时间</th>
+              <th className="px-4 py-2 border">教室</th>
+              <th className="px-4 py-2 border">班级</th>
+              <th className="px-4 py-2 border">课程内容</th>
+              <th className="px-4 py-2 border">助教及任课老师</th>
+              <th className="px-4 py-2 border">课程</th>
+              <th className="px-4 py-2 border">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {classes.map((classItem, index) => (
+              <tr
+                key={index}
+                style={{
+                  backgroundColor:
+                    classItem.type === "教辅"
+                      ? "rgba(51, 140, 195, 0.5)"
+                      : "rgb(51, 140, 195)",
+                }}
+              >
+                <td className="px-4 py-2 border">
+                  <input
+                    type="time"
+                    value={classItem.startTime || ""}
+                    onChange={(e) => handleInputChange(index, "startTime", e.target.value)}
+                    className="input input-bordered w-full"
+                    step="600"
+                    style={{ backgroundColor: "rgb(51, 140, 195)" }}
+                  />
+                </td>
+                <td className="px-4 py-2 border">
+                  <input
+                    type="time"
+                    value={classItem.endTime || ""}
+                    onChange={(e) => handleInputChange(index, "endTime", e.target.value)}
+                    className="input input-bordered w-full"
+                    step="600"
+                    style={{ backgroundColor: "rgb(51, 140, 195)" }}
+                  />
+                </td>
 
-          <select
-            name="className"
-            value={newClass.className}
-            onChange={handleInputChange}
-            className="select select-bordered w-full mb-2"
-          >
-            <option value="" disabled>Select Class Name</option>
-            <option value="雅思强化">雅思强化</option>
-            <option value="剑桥英语">剑桥英语</option>
-            {/* Add more class names as needed */}
-          </select>
 
-          <input
-            type="text"
-            name="content"
-            value={newClass.content}
-            onChange={handleInputChange}
-            placeholder="Class Content"
-            className="input input-bordered w-full mb-2"
-          />
-
-          <select
-            name="teacher"
-            value={newClass.teacher}
-            onChange={handleInputChange}
-            className="select select-bordered w-full mb-2"
-          >
-            <option value="" disabled>Select Teacher</option>
-            <option value="Zoe">Zoe</option>
-            <option value="Cathy">Cathy</option>
-            <option value="Brian">Brian</option>
-            {/* Add more teachers as needed */}
-          </select>
-
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <label>Start Time:</label>
-              <input
-                type="time"
-                name="startTime"
-                value={newClass.startTime}
-                onChange={handleInputChange}
-                className="input input-bordered w-full"
-              />
-            </div>
-            <div className="flex-1">
-              <label>End Time:</label>
-              <input
-                type="time"
-                name="endTime"
-                value={newClass.endTime}
-                onChange={handleInputChange}
-                className="input input-bordered w-full"
-              />
-            </div>
-          </div>
-
-          <button className="btn btn-primary w-full mt-4" onClick={handleAddClass}>
-            Add
-          </button>
-        </div>
-
-        {/* Calendar */}
-        <div id="calendar-container" className="w-full lg:w-3/4 p-5">
-          <FullCalendar
-            ref={calendarRef}
-            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-            initialView="timeGridDay"
-            headerToolbar={{
-              left: "prev,next today",
-              center: "title",
-              right: "dayGridMonth,timeGridWeek,timeGridDay",
-            }}
-            slotMinTime="06:00:00"
-            slotMaxTime="22:00:00"
-            slotLabelFormat={{
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false,
-            }}
-            editable={false}
-            droppable={false} 
-            datesSet={handleDatesSet} // Track the current view's date
-            events={Object.entries(classData).flatMap(([start, events]) =>
-              events.map((event) => ({
-                title: `${event.className} - ${event.teacher}`,
-                start: event.start,
-                end: event.end,
-                extendedProps: {
-                  content: event.content,
-                  classroom: event.classroom,
-                },
-              }))
-            )}
-            eventContent={(arg) => (
-              <div className="p-2 shadow rounded">
-                <b>{arg.event.extendedProps.classroom}</b>
-                <div>{arg.event.title}</div>
-                <div>{arg.event.extendedProps.content}</div>
-              </div>
-            )}
-          />
-        </div>
+                <td className="px-4 py-2 border">
+                  <select
+                    value={classItem.classroom || ""}
+                    onChange={(e) => handleInputChange(index, "classroom", e.target.value)}
+                    className="select select-bordered w-full"
+                    style={{ backgroundColor: "rgb(51, 140, 195)" }}
+                  >
+                    <option value="" disabled>选择教室</option>
+                    <option value="VIP1">VIP1</option>
+                    <option value="VIP2">VIP2</option>
+                    <option value="VIP3">VIP3</option>
+                    <option value="阳光房">阳光房</option>
+                  </select>
+                </td>
+                <td className="px-4 py-2 border">
+                  <select
+                    value={classItem.className || ""}
+                    onChange={(e) => handleInputChange(index, "className", e.target.value)}
+                    className="select select-bordered w-full"
+                    style={{ backgroundColor: "rgb(51, 140, 195)" }}
+                  >
+                    <option value="" disabled>选择班级</option>
+                    {clusters.map((cluster) => (
+                      <option key={cluster._id} value={cluster._id}>{cluster.name}</option>
+                    ))}
+                  </select>
+                </td>
+                <td className="px-4 py-2 border">
+                  <input
+                    type="text"
+                    value={classItem.content || ""}
+                    onChange={(e) => handleInputChange(index, "content", e.target.value)}
+                    placeholder="Enter content"
+                    className="input input-bordered w-full"
+                    style={{ backgroundColor: "rgb(51, 140, 195)" }}
+                  />
+                </td>
+                <td className="px-4 py-2 border">
+                  <select
+                    value={classItem.teacher || ""}
+                    onChange={(e) => handleInputChange(index, "teacher", e.target.value)}
+                    className="select select-bordered w-full"
+                    style={{ backgroundColor: "rgb(51, 140, 195)" }}
+                  >
+                    <option value="" disabled>选择教师</option>
+                    {teachers.map((teacher) => (
+                      <option key={teacher._id} value={teacher._id}>{teacher.username}</option>
+                    ))}
+                  </select>
+                </td>
+                <td className="px-4 py-2 border">
+                  <select
+                    value={classItem.type || ""}
+                    onChange={(e) => handleInputChange(index, "type", e.target.value)}
+                    className="select select-bordered w-full"
+                    style={{ backgroundColor: "rgb(51, 140, 195)" }}
+                  >
+                    <option value="" disabled>选择课程</option>
+                    <option value="阅读">阅读</option>
+                    <option value="写作">写作</option>
+                    <option value="口语">口语</option>
+                    <option value="听力">听力</option>
+                    <option value="教辅">教辅</option>
+                  </select>
+                </td>
+                <td className="px-4 py-2 border">
+                  <button
+                    className="btn btn-error btn-sm"
+                    onClick={() => handleDeleteClass(index, classItem._id)}
+                  >
+                    删除
+                  </button>
+                </td>
+              </tr>
+            ))}
+            <tr>
+              <td colSpan="8" className="text-right px-4 py-2">
+                <button className="btn btn-primary" onClick={handleAddClass}>
+                  添加课程
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   );
 };
 
 export default AdminCalendarPage;
-
-
-
-
