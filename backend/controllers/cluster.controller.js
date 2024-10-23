@@ -58,9 +58,6 @@ export const createCluster = async (req, res) => {
         console.error("Error in Create cluster:", error.message);
         res.status(500).json({ success: false, message: "Server Error" });
     }
-
-    // Notification
-
 };
 
 export const updateCluster = async (req, res) => {

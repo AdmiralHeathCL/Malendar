@@ -21,6 +21,12 @@ const clusterSchema = mongoose.Schema({
         ref: "inclass",
         default: []  
         }
+    ],
+    isActive: [
+        {
+            type: Boolean,
+            default: true
+        }
     ]
 }, {
     timestamps: true

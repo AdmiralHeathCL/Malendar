@@ -90,4 +90,9 @@ body.overflow-hidden {
     box-sizing: border-box;
     color: #c69109;
   }
+
+  .grayscale {
+    filter: grayscale(100%);
+  }
+  
   

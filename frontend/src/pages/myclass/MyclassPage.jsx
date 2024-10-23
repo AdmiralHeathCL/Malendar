@@ -66,7 +66,6 @@ const MyclassPage = () => {
       <div className="p-4">
         <h1 className="text-2xl font-bold">我的班级</h1>
       </div>
- gfvbhhhhhh
       <div className="flex justify-center mb-4">
         {userClasses.length > cardsPerRow && (
           <button 

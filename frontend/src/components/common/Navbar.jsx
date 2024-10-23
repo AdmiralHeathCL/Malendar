@@ -31,7 +31,7 @@ const Navbar = () => {
   });
 
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
-  const location = useLocation(); // Get the current location (path)
+  const location = useLocation();
 
   const handlePageClick = (path) => {
     if (location.pathname === path) {
@@ -156,21 +156,28 @@ const Navbar = () => {
         <label htmlFor="my-drawer" className="drawer-overlay" style={{ zIndex: 50 }}></label>
         <ul className="menu bg-base-200 text-base-content min-h-full w-40 p-4" style={{ zIndex: 50 }}>
           <li>
-            <Link to="/myclass" onClick={() => handlePageClick('/myclass')}>
-              我的班级
-            </Link>
-          </li>
-          <li>
             <Link to="/calendar" onClick={() => handlePageClick('/calendar')}>
               小玛宝历
             </Link>
           </li>
           <li>
-            <Link to="/page3" onClick={() => handlePageClick('/page3')}>
-              所有班级
-            </Link>
+            {authUser?.usertype === "isAdmin" ? (
+              <Link to="/allclass" onClick={() => handlePageClick('/allclass')}>
+                所有班级
+              </Link>
+            ) : (
+              <Link to="/myclass" onClick={() => handlePageClick('/myclass')}>
+                我的班级
+              </Link>
+            )}
           </li>
-
+          {authUser?.usertype === "isAdmin" && (
+            <li>
+              <Link to="/createclass" onClick={() => handlePageClick('/createclass')}>
+                创建班级
+              </Link>
+            </li>
+          )}
           {authUser?.usertype === "isAdmin" && (
             <li>
               <Link to="/manage" onClick={() => handlePageClick('/manage')}>
@@ -178,6 +185,13 @@ const Navbar = () => {
               </Link>
             </li>
           )}
+
+          <li>
+            <Link to="/page3" onClick={() => handlePageClick('/page3')}>
+              其他页面
+            </Link>
+          </li>
+
         </ul>
       </div>
     </div>

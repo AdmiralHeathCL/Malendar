@@ -6,7 +6,8 @@ import CalendarPage from "./pages/calendar/CalendarPage";
 import AdminCalendarPage from "./pages/calendar/AdminCalendarPage";
 import MyclassPage from "./pages/myclass/MyclassPage";
 import ClassDetailPage from "./pages/myclass/ClassdetailPage";
-import ManageClassPage from "./pages/admin/ManageClassPage";
+import CreateClassPage from "./pages/admin/CreateClassPage";
+import AllclassPage from "./pages/admin/AllClassPage";
 import Navbar from "./components/common/Navbar";
 import AdminRoute from "./pages/admin/AdminRoute";
 
@@ -55,6 +56,18 @@ function App() {
           <Route path='/manage' element={
             <AdminRoute authUser={authUser}>
               <AdminCalendarPage />
+            </AdminRoute>
+          } />
+
+          <Route path='/allclass' element={
+            <AdminRoute authUser={authUser}>
+              <AllclassPage />
+            </AdminRoute>
+          } />
+
+          <Route path='/createclass' element={
+            <AdminRoute authUser={authUser}>
+              <CreateClassPage />
             </AdminRoute>
           } />
 
