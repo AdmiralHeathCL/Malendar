@@ -171,13 +171,7 @@ const Navbar = () => {
               </Link>
             )}
           </li>
-          {authUser?.usertype === "isAdmin" && (
-            <li>
-              <Link to="/createclass" onClick={() => handlePageClick('/createclass')}>
-                创建班级
-              </Link>
-            </li>
-          )}
+          
           {authUser?.usertype === "isAdmin" && (
             <li>
               <Link to="/manage" onClick={() => handlePageClick('/manage')}>

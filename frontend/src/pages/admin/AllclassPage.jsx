@@ -6,7 +6,11 @@ import toast from 'react-hot-toast';
 const AllclassPage = () => {
   const queryClient = useQueryClient();
   const [classes, setClasses] = useState([]);
-  const [authUser, setAuthUser] = useState(null); 
+  const [authUser, setAuthUser] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(""); // Track search input
+  const [filteredStudents, setFilteredStudents] = useState([]); // Filtered student list
+  const [selectedStudents, setSelectedStudents] = useState([]); // Selected students for the cluster
+  const [clusterName, setClusterName] = useState(""); // Track the new cluster name
 
   // Fetch authenticated user
   const { data: authUserData } = useQuery({
@@ -25,6 +29,39 @@ const AllclassPage = () => {
       const res = await fetch("/api/clusters");
       if (!res.ok) throw new Error("Failed to fetch clusters");
       return res.json();
+    },
+  });
+
+  // Fetch users for the cluster creation (students and teachers)
+  const { data: usersData } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const res = await fetch("/api/users/all");
+      if (!res.ok) throw new Error("Failed to fetch users");
+      return res.json();
+    },
+  });
+
+  // Create new cluster mutation
+  const createClusterMutation = useMutation({
+    mutationFn: async ({ name, students }) => {
+      const res = await fetch(`/api/clusters`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, students }),
+      });
+      if (!res.ok) {
+        throw new Error("Failed to create cluster");
+      }
+    },
+    onSuccess: () => {
+      toast.success('班级创建成功');
+      queryClient.invalidateQueries(['clusters']); // Refresh clusters
+      setClusterName(''); // Reset input fields
+      setSelectedStudents([]);
+    },
+    onError: () => {
+      toast.error('班级创建失败');
     },
   });
 
@@ -66,12 +103,23 @@ const AllclassPage = () => {
     },
   });
 
+  // Filter students by search term and sort by first character
+  useEffect(() => {
+    if (usersData && usersData.data) {
+      const filtered = usersData.data
+        .filter(user => user.usertype === 'isStudent' || user.usertype === 'isTeacher')
+        .filter(user => user.username.toLowerCase().includes(searchTerm.toLowerCase()))
+        .sort((a, b) => a.username.localeCompare(b.username)); // Sort alphabetically
+      setFilteredStudents(filtered);
+    }
+  }, [searchTerm, usersData]);
+
   useEffect(() => {
     if (authUserData) {
-      setAuthUser(authUserData); 
+      setAuthUser(authUserData);
     }
     if (clusters && clusters.data) {
-      setClasses(clusters.data); 
+      setClasses(clusters.data);
     }
   }, [authUserData, clusters]);
 
@@ -81,6 +129,24 @@ const AllclassPage = () => {
 
   const handleDelete = (classId) => {
     deleteMutation.mutate(classId);
+  };
+
+  const handleCreateCluster = () => {
+    if (!clusterName || selectedStudents.length === 0) {
+      toast.error("请输入班级名称并选择学生或教师");
+      return;
+    }
+    createClusterMutation.mutate({ name: clusterName, students: selectedStudents });
+  };
+
+  const handleSelectStudent = (studentId) => {
+    if (selectedStudents.includes(studentId)) {
+      // Remove student if already selected
+      setSelectedStudents(selectedStudents.filter(id => id !== studentId));
+    } else {
+      // Add student if not already selected
+      setSelectedStudents([...selectedStudents, studentId]);
+    }
   };
 
   const activeClasses = classes.filter(classItem => classItem.isActive[0]);
@@ -93,7 +159,7 @@ const AllclassPage = () => {
     <div className="w-full p-4">
       <h1 className="text-2xl font-bold">所有班级</h1>
 
-      <div className="p-4">
+      <div className="p-2">
         <div className="flex flex-wrap">
           {activeClasses.map((classItem) => (
             <Classcard
@@ -116,7 +182,7 @@ const AllclassPage = () => {
             <input type="checkbox" />
             <div className="collapse-title text-xl font-medium">隐藏班级</div>
             <div className="collapse-content">
-              <div className="px-4 py-2">
+              <div className="px-2 py-1">
                 <div className="flex flex-wrap">
                   {inactiveClasses.map((classItem) => (
                     <Classcard
@@ -134,6 +200,86 @@ const AllclassPage = () => {
               </div>
             </div>
           </div>
+
+          <div className='p-1'></div>
+          {/* Create Cluster Section */}
+          <div className="collapse bg-base-200">
+            <input type="checkbox" />
+            <div className="collapse-title text-xl font-medium">创建班级</div>
+            <div className="collapse-content">
+              <div className="px-4 py-2">
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="text"
+                    className="input input-bordered"
+                    placeholder="输入班级名称"
+                    value={clusterName}
+                    onChange={(e) => setClusterName(e.target.value)}
+                  />
+
+                  {/* Daisy UI Search Bar */}
+                  <label className="input input-bordered flex items-center gap-2">
+                    <input
+                      type="text"
+                      className="grow"
+                      placeholder="搜索学生或教师"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                      className="h-4 w-4 opacity-70">
+                      <path
+                        fillRule="evenodd"
+                        d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                        clipRule="evenodd" />
+                    </svg>
+                  </label>
+
+                  {/* Dropdown with Sorted Students and Teachers */}
+                  <div className="collapse bg-base-100 mt-2">
+                    <input type="checkbox" />
+                    <div className="collapse-title text-lg font-medium">选择学生</div>
+                    <div className="collapse-content">
+                      <ul className="list-disc pl-4">
+                        {filteredStudents.map(user => (
+                          <li key={user._id} onClick={() => handleSelectStudent(user._id)} className="cursor-pointer">
+                            {user.username}
+                            {/* ({user.usertype === 'isStudent' ? '学生' : '教师'}) */}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Section for selected students */}
+                  <div className="mt-4">
+                    <h2 className="text-lg font-medium">已选学生</h2>
+                    <ul className="list-disc pl-4">
+                      {selectedStudents.map(selectedId => {
+                        const student = usersData?.data?.find(user => user._id === selectedId);
+                        return (
+                          <li key={selectedId} onClick={() => handleSelectStudent(selectedId)} className="cursor-pointer text-[#c4aa42]">
+                            {student?.username}
+                            {/* ({student?.usertype === 'isStudent' ? '学生' : '教师'}) */}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+
+                  <button
+                    className="btn btn-primary mt-2"
+                    onClick={handleCreateCluster}
+                  >
+                    创建班级
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -141,3 +287,5 @@ const AllclassPage = () => {
 };
 
 export default AllclassPage;
+
+
