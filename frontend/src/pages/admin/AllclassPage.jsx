@@ -48,7 +48,7 @@ const AllclassPage = () => {
       const res = await fetch(`/api/clusters`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, students }),
+        body: JSON.stringify({ name, students, isActive: [true] }), // Set isActive to true by default
       });
       if (!res.ok) {
         throw new Error("Failed to create cluster");
@@ -107,8 +107,8 @@ const AllclassPage = () => {
   useEffect(() => {
     if (usersData && usersData.data) {
       const filtered = usersData.data
-        .filter(user => user.usertype === 'isStudent' || user.usertype === 'isTeacher')
-        .filter(user => user.username.toLowerCase().includes(searchTerm.toLowerCase()))
+        .filter(user => (user.usertype === 'isStudent' || user.usertype === 'isTeacher') &&
+          user.username.toLowerCase().startsWith(searchTerm.toLowerCase())) // Match names from the beginning
         .sort((a, b) => a.username.localeCompare(b.username)); // Sort alphabetically
       setFilteredStudents(filtered);
     }
@@ -147,6 +147,7 @@ const AllclassPage = () => {
       // Add student if not already selected
       setSelectedStudents([...selectedStudents, studentId]);
     }
+    setSearchTerm(""); // Clear search bar after selection
   };
 
   const activeClasses = classes.filter(classItem => classItem.isActive[0]);
@@ -156,10 +157,10 @@ const AllclassPage = () => {
   if (error) return <div>班级加载错误</div>;
 
   return (
-    <div className="w-full p-4">
+    <div className="w-full p-8">
       <h1 className="text-2xl font-bold">所有班级</h1>
 
-      <div className="p-2">
+      <div className="py-2">
         <div className="flex flex-wrap">
           {activeClasses.map((classItem) => (
             <Classcard
@@ -180,7 +181,7 @@ const AllclassPage = () => {
         <div>
           <div className="collapse bg-base-200">
             <input type="checkbox" />
-            <div className="collapse-title text-xl font-medium">隐藏班级</div>
+            <div className="collapse-title text-xl font-medium">显示隐藏的班级</div>
             <div className="collapse-content">
               <div className="px-2 py-1">
                 <div className="flex flex-wrap">
@@ -202,9 +203,10 @@ const AllclassPage = () => {
           </div>
 
           <div className='p-1'></div>
+          
           {/* Create Cluster Section */}
           <div className="collapse bg-base-200">
-            <input type="checkbox" />
+            <input type="checkbox" defaultChecked /> {/* This makes 创建班级 open by default */}
             <div className="collapse-title text-xl font-medium">创建班级</div>
             <div className="collapse-content">
               <div className="px-4 py-2">
@@ -240,14 +242,16 @@ const AllclassPage = () => {
 
                   {/* Dropdown with Sorted Students and Teachers */}
                   <div className="collapse bg-base-100 mt-2">
-                    <input type="checkbox" />
+                    <input type="checkbox" defaultChecked /> {/* This makes 选择学生 open by default */}
                     <div className="collapse-title text-lg font-medium">选择学生</div>
                     <div className="collapse-content">
                       <ul className="list-disc pl-4">
                         {filteredStudents.map(user => (
-                          <li key={user._id} onClick={() => handleSelectStudent(user._id)} className="cursor-pointer">
+                          <li
+                            key={user._id}
+                            onClick={() => handleSelectStudent(user._id)}
+                            className="cursor-pointer hover:bg-gray-200 p-2">
                             {user.username}
-                            {/* ({user.usertype === 'isStudent' ? '学生' : '教师'}) */}
                           </li>
                         ))}
                       </ul>
@@ -261,9 +265,11 @@ const AllclassPage = () => {
                       {selectedStudents.map(selectedId => {
                         const student = usersData?.data?.find(user => user._id === selectedId);
                         return (
-                          <li key={selectedId} onClick={() => handleSelectStudent(selectedId)} className="cursor-pointer text-[#c4aa42]">
+                          <li
+                            key={selectedId}
+                            onClick={() => handleSelectStudent(selectedId)}
+                            className="cursor-pointer text-[#c4aa42]">
                             {student?.username}
-                            {/* ({student?.usertype === 'isStudent' ? '学生' : '教师'}) */}
                           </li>
                         );
                       })}
@@ -287,5 +293,3 @@ const AllclassPage = () => {
 };
 
 export default AllclassPage;
-
-

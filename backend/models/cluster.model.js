@@ -9,8 +9,6 @@ const clusterSchema = mongoose.Schema({
     students: [
         {
         type: mongoose.Schema.Types.ObjectId,
-        // index: true,
-        // sparse: true,
         ref: "User",
         default: []
         }
