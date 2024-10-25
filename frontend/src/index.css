@@ -95,4 +95,18 @@ body.overflow-hidden {
     filter: grayscale(100%);
   }
   
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* For Internet Explorer and Edge */
+  html {
+    -ms-overflow-style: none;
+  }
+  
+  /* For Firefox */
+  html {
+    scrollbar-width: none;
+  }
+  
   

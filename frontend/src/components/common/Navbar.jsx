@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 
 const Navbar = () => {
   const queryClient = useQueryClient();
+  const location = useLocation();
 
   const { mutate: logout } = useMutation({
     mutationFn: async () => {
@@ -31,7 +32,6 @@ const Navbar = () => {
   });
 
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
-  const location = useLocation();
 
   const handlePageClick = (path) => {
     if (location.pathname === path) {
@@ -57,8 +57,11 @@ const Navbar = () => {
     };
   }, []);
 
+  // Check if the current path is the homepage
+  const isHomepage = location.pathname === '/';
+
   return (
-    <div className="navbar bg-base-100">
+    <div className={`navbar ${isHomepage ? 'bg-transparent' : 'bg-base-100'} fixed top-0 left-0 w-full z-50`}>
       <input id="my-drawer" type="checkbox" className="drawer-toggle" />
 
       <div className="flex-none">
@@ -99,6 +102,7 @@ const Navbar = () => {
       </div>
 
       <div className="flex gap-1">
+        {/* Notifications */}
         <div className="dropdown dropdown-bottom dropdown-end">
           <div tabIndex="0" role="button" className="btn btn-ghost btn-circle">
             <div className="indicator">
@@ -127,6 +131,7 @@ const Navbar = () => {
           </div>
         </div>
 
+        {/* Account Dropdown */}
         <details className="dropdown dropdown-bottom dropdown-end">
           <summary className="btn btn-square btn-ghost">
             <svg
@@ -144,9 +149,9 @@ const Navbar = () => {
           <ul className="menu dropdown-content bg-base-100 rounded-box z-[1] w-36 p-2 shadow">
             <li><a>我的账户</a></li>
             <li><Link to="/login" onClick={(e) => {
-									e.preventDefault();
-									logout();
-								}}>登出</Link></li>
+              e.preventDefault();
+              logout();
+            }}>登出</Link></li>
           </ul>
         </details>
       </div>
@@ -193,6 +198,7 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
 
 
 

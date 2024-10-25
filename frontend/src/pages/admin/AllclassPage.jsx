@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'; 
+import React, { useState, useEffect } from 'react';
 import Classcard from '../../components/common/Classcard';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -11,6 +11,7 @@ const AllclassPage = () => {
   const [filteredStudents, setFilteredStudents] = useState([]); // Filtered student list
   const [selectedStudents, setSelectedStudents] = useState([]); // Selected students for the cluster
   const [clusterName, setClusterName] = useState(""); // Track the new cluster name
+  const [sortMethod, setSortMethod] = useState('alphabetical'); // Sorting method state
 
   // Fetch authenticated user
   const { data: authUserData } = useQuery({
@@ -141,13 +142,23 @@ const AllclassPage = () => {
 
   const handleSelectStudent = (studentId) => {
     if (selectedStudents.includes(studentId)) {
-      // Remove student if already selected
       setSelectedStudents(selectedStudents.filter(id => id !== studentId));
     } else {
-      // Add student if not already selected
       setSelectedStudents([...selectedStudents, studentId]);
     }
     setSearchTerm(""); // Clear search bar after selection
+  };
+
+  // Handle sorting of the active classes
+  const sortedActiveClasses = () => {
+    return [...activeClasses].sort((a, b) => {
+      if (sortMethod === 'alphabetical') {
+        return a.name.localeCompare(b.name);
+      } else if (sortMethod === 'date') {
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      }
+      return 0;
+    });
   };
 
   const activeClasses = classes.filter(classItem => classItem.isActive[0]);
@@ -158,11 +169,27 @@ const AllclassPage = () => {
 
   return (
     <div className="w-full p-8">
+      <div className="flex justify-between items-center">
       <h1 className="text-2xl font-bold">所有班级</h1>
+
+      {authUser?.usertype === 'isAdmin' && (
+        <div>
+          <select
+            value={sortMethod}
+            onChange={(e) => setSortMethod(e.target.value)}
+            className="select select-bordered select-sm text-sm"
+          >
+            <option value="alphabetical">按名称排序</option>
+            <option value="date">按创建日期排序</option>
+          </select>
+        </div>
+      )}
+    </div>
+
 
       <div className="py-2">
         <div className="flex flex-wrap">
-          {activeClasses.map((classItem) => (
+          {sortedActiveClasses().map((classItem) => (
             <Classcard
               key={classItem._id}
               title={classItem.name}

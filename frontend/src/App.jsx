@@ -44,7 +44,7 @@ function App() {
   }
 
   return (
-    <div>
+    <div style={{ minWidth: '600px', overflowX: 'auto' }}>
       {authUser && <Navbar className="w-full fixed top-0 left-0" />} 
       <div className='flex w-full mx-auto'>
         <Routes>

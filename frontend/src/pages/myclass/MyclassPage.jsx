@@ -4,7 +4,6 @@ import Classcard from '../../components/common/Classcard';
 import toast from "react-hot-toast";
 
 const MyclassPage = () => {
-  const [showAll, setShowAll] = useState(false); // State to control show all or limited view
   const [cardsPerRow, setCardsPerRow] = useState(3); // State to track how many cards fit in one row
 
   // Function to calculate how many cards fit in a row
@@ -27,6 +26,7 @@ const MyclassPage = () => {
     };
   }, []);
 
+  // Fetch user data first
   const { data: userData, isLoading: isUserLoading, error: userError } = useQuery({
     queryKey: ['authUser'],
     queryFn: async () => {
@@ -36,9 +36,7 @@ const MyclassPage = () => {
     }
   });
 
-  if (isUserLoading) return <div className="h-screen flex justify-center items-center">Loading user data...</div>;
-  if (userError) return <div>Error: {userError.message}</div>;
-
+  // Fetch clusters data, but only if userData is present
   const { data: clusters, isLoading: isClusterLoading, error: clusterError } = useQuery({
     queryKey: ['clusters'],
     queryFn: async () => {
@@ -46,47 +44,38 @@ const MyclassPage = () => {
       if (!res.ok) throw new Error("Failed to fetch clusters");
       return res.json();
     },
-    enabled: !!userData, 
+    enabled: !!userData,  // Only run this query if userData is present
   });
 
-  if (isClusterLoading) return <div>Loading classes...</div>;
-  if (clusterError) return <div>Error: {clusterError.message}</div>;
+  // Handle loading and error states first
+  if (isUserLoading || isClusterLoading) return <div className="h-screen flex justify-center items-center">Loading...</div>;
+  if (userError || clusterError) return <div>Error: {userError?.message || clusterError?.message}</div>;
 
+  // Now handle the case where no classes are found
   if (!userData.inCluster || userData.inCluster.length === 0) {
     return <div className="p-4 text-xl text-center w-full">您当前还没有加入任何班级。</div>;
   }
 
-  const userClasses = clusters?.data?.filter(cluster => userData.inCluster.includes(cluster._id));
+  // Filter and sort user classes
+  const userClasses = clusters?.data
+    ?.filter(cluster => userData.inCluster.includes(cluster._id))
+    ?.sort((a, b) => a.name.localeCompare(b.name)); // Sort classes alphabetically by name
 
-  // Calculate how many rows to show initially based on cardsPerRow
-  const initialCardsToShow = showAll ? userClasses.length : cardsPerRow;
-
+  // Final JSX to render the page
   return (
-    <div className="w-full">
-      <div className="p-4">
+    <div className="w-full p-8">
+      <div className="w-full pt-8">
         <h1 className="text-2xl font-bold">我的班级</h1>
       </div>
-      <div className="flex justify-center mb-4">
-        {userClasses.length > cardsPerRow && (
-          <button 
-            className="btn btn-primary" 
-            onClick={() => setShowAll(!showAll)}
-          >
-            {showAll ? "显示更少" : "显示所有"}
-          </button>
-        )}
-      </div>
       
-      {/* Display class cards in a flex container */}
       <div className="flex flex-wrap p-4">
         {userClasses.length > 0 ? (
           <>
-            {/* Show limited number of class cards if showAll is false, else show all */}
-            {userClasses.slice(0, initialCardsToShow).map((classItem) => (
+            {userClasses.map((classItem) => (
               <Classcard 
                 key={classItem._id} 
                 title={classItem.name} 
-                imageUrl="../assets/Banana.jpg"  // Replace with actual image URL if available
+                imageUrl="../assets/Banana.jpg"
                 classId={classItem._id}
               />
             ))}
@@ -100,4 +89,3 @@ const MyclassPage = () => {
 };
 
 export default MyclassPage;
-
