@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
 const AdminCalendarPage = () => {
-  // Ensure default values are strings (not undefined)
+  // Default values for a class
   const defaultClass = {
     classroom: "",
     className: "",
@@ -10,7 +10,7 @@ const AdminCalendarPage = () => {
     teacher: "",
     startTime: "",
     endTime: "",
-    type: "", // Ensure this is `type` not `courseType`
+    type: "",
   };
 
   const [classes, setClasses] = useState([{ ...defaultClass }]);
@@ -47,7 +47,7 @@ const AdminCalendarPage = () => {
         const res = await fetch("/api/clusters");
         const data = await res.json();
         if (res.ok && data && data.data) {
-          setClusters(data.data); 
+          setClusters(data.data);
         } else {
           toast.error("Failed to fetch clusters");
         }
@@ -60,14 +60,26 @@ const AdminCalendarPage = () => {
     fetchClusters();
   }, []);
 
-  // Fetch in-classes by selected date
+  // Fetch classes by date
   useEffect(() => {
     const fetchClassesForDate = async () => {
       try {
         const res = await fetch(`/api/inclasses/date/${selectedDate.replace(/-/g, "")}`);
         const data = await res.json();
         if (res.ok && data && data.data) {
-          setClasses(data.data.length ? data.data : [{ ...defaultClass }]);
+          const formattedClasses = data.data.map((classItem) => ({
+            classroom: classItem.classroom || "",
+            className: classItem.classcodes ? classItem.classcodes[0] : "",
+            content: classItem.description || "",
+            teacher: classItem.teachers ? classItem.teachers[0] : "",
+            startTime: classItem.starttime || "",
+            endTime: classItem.endtime || "",
+            type: classItem.type || "",
+            _id: classItem._id || null, // Include _id for existing classes
+          }));
+
+          // Add an empty row for admin to fill in
+          setClasses([...formattedClasses, { ...defaultClass }]);
         } else {
           toast.error("Failed to fetch classes for the selected date");
         }
@@ -82,7 +94,7 @@ const AdminCalendarPage = () => {
 
   const handleInputChange = (index, field, value) => {
     const updatedClasses = [...classes];
-    updatedClasses[index][field] = value || ""; // Default to an empty string
+    updatedClasses[index][field] = value || "";
 
     if (field === "startTime") {
       const startTime = value;
@@ -90,7 +102,7 @@ const AdminCalendarPage = () => {
 
       if (!endTime) {
         const [hours, minutes] = startTime.split(":");
-        const defaultEndTime = `${String(Number(hours) + 2).padStart(2, "0")}${minutes}`;
+        const defaultEndTime = `${String(Number(hours) + 2).padStart(2, "0")}:${minutes}`;
         updatedClasses[index].endTime = defaultEndTime;
       } else if (endTime <= startTime) {
         toast.error("End time cannot be earlier than start time");
@@ -113,33 +125,32 @@ const AdminCalendarPage = () => {
 
   const handleAddClass = async () => {
     const lastClass = classes[classes.length - 1];
-  
+
     if (lastClass.className && lastClass.startTime && lastClass.endTime) {
       try {
-        // Prepare class data for sending to the backend in HH:mm format
         const newClass = {
           classroom: lastClass.classroom,
-          classcodes: [lastClass.className], // Assuming this is the cluster ID
+          classcodes: [lastClass.className],
           description: lastClass.content,
-          teachers: [lastClass.teacher], // Assuming this is the teacher ID
-          starttime: lastClass.startTime, // Use HH:mm format directly
-          endtime: lastClass.endTime, // Use HH:mm format directly
-          date: selectedDate.replace(/-/g, ""), // Ensure date format
+          teachers: [lastClass.teacher],
+          starttime: lastClass.startTime,
+          endtime: lastClass.endTime,
+          date: selectedDate.replace(/-/g, ""),
           type: lastClass.type,
         };
-  
+
         const res = await fetch("/api/inclasses", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newClass),
         });
-  
+
         const data = await res.json();
-  
+
         if (res.ok) {
           toast.success("Class added successfully");
-  
-          // Add the new class to the frontend state
+
+          // Append the added class and add a new blank row for next input
           setClasses([...classes, { ...defaultClass }]);
         } else {
           console.error("Error from server:", data);
@@ -153,8 +164,6 @@ const AdminCalendarPage = () => {
       toast.error("Please fill all required fields");
     }
   };
-  
-  
 
   const handleDeleteClass = async (index, classId) => {
     try {
@@ -193,7 +202,7 @@ const AdminCalendarPage = () => {
       </div>
 
       <div className="overflow-x-auto bg-base-100 rounded-lg shadow-lg p-5" style={{ backgroundColor: "rgb(51, 140, 195)" }}>
-        <table className="min-w-full ">
+        <table className="min-w-full">
           <thead>
             <tr>
               <th className="px-4 py-2 border">上课时间</th>
@@ -208,15 +217,7 @@ const AdminCalendarPage = () => {
           </thead>
           <tbody>
             {classes.map((classItem, index) => (
-              <tr
-                key={index}
-                style={{
-                  backgroundColor:
-                    classItem.type === "教辅"
-                      ? "rgba(51, 140, 195, 0.5)"
-                      : "rgb(51, 140, 195)",
-                }}
-              >
+              <tr key={index} style={{ backgroundColor: classItem.type === "教辅" ? "rgba(51, 140, 195, 0.5)" : "rgb(51, 140, 195)" }}>
                 <td className="px-4 py-2 border">
                   <input
                     type="time"
@@ -237,7 +238,6 @@ const AdminCalendarPage = () => {
                     style={{ backgroundColor: "rgb(51, 140, 195)" }}
                   />
                 </td>
-
 
                 <td className="px-4 py-2 border">
                   <select
