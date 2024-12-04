@@ -10,6 +10,7 @@ import CreateClassPage from "./pages/admin/CreateClassPage";
 import AllclassPage from "./pages/admin/AllClassPage";
 import Navbar from "./components/common/Navbar";
 import AdminRoute from "./pages/admin/AdminRoute";
+import MyInfoPage from "./pages/auth/MyInfoPage";
 
 import { Toaster } from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -52,7 +53,8 @@ function App() {
           <Route path='/calendar' element={authUser ? <CalendarPage /> : <Navigate to="/login" />} />
           <Route path='/myclass' element={authUser ? <MyclassPage /> : <Navigate to="/login" />} />
           <Route path='/myclass/:id' element={authUser ? <ClassDetailPage /> : <Navigate to="/login" />} />
-          
+          <Route path='/myinfo' element={authUser ? <MyInfoPage /> : <Navigate to="/login" />} />
+
           <Route path='/manage' element={
             <AdminRoute authUser={authUser}>
               <AdminCalendarPage />

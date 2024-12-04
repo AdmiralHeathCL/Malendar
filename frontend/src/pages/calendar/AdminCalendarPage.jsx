@@ -19,6 +19,7 @@ const AdminCalendarPage = () => {
   );
   const [teachers, setTeachers] = useState([]);
   const [clusters, setClusters] = useState([]);
+  const [activeClusters, setActiveClusters] = useState([]); // Active clusters for class dropdown
 
   // Fetch teachers
   useEffect(() => {
@@ -40,14 +41,16 @@ const AdminCalendarPage = () => {
     fetchTeachers();
   }, []);
 
-  // Fetch clusters
+  // Fetch clusters and filter only active ones
   useEffect(() => {
     const fetchClusters = async () => {
       try {
         const res = await fetch("/api/clusters");
         const data = await res.json();
         if (res.ok && data && data.data) {
-          setClusters(data.data);
+          const activeClusters = data.data.filter(cluster => cluster.isActive[0]); // Filter active clusters
+          setClusters(data.data); // Set all clusters
+          setActiveClusters(activeClusters); // Set only active clusters for dropdown
         } else {
           toast.error("Failed to fetch clusters");
         }
@@ -92,6 +95,7 @@ const AdminCalendarPage = () => {
     fetchClassesForDate();
   }, [selectedDate]);
 
+  // Handle input changes for class creation
   const handleInputChange = (index, field, value) => {
     const updatedClasses = [...classes];
     updatedClasses[index][field] = value || "";
@@ -123,6 +127,7 @@ const AdminCalendarPage = () => {
     setClasses(updatedClasses);
   };
 
+  // Handle adding a class
   const handleAddClass = async () => {
     const lastClass = classes[classes.length - 1];
 
@@ -165,6 +170,7 @@ const AdminCalendarPage = () => {
     }
   };
 
+  // Handle deleting a class
   const handleDeleteClass = async (index, classId) => {
     try {
       if (classId) {
@@ -251,6 +257,7 @@ const AdminCalendarPage = () => {
                     <option value="VIP2">VIP2</option>
                     <option value="VIP3">VIP3</option>
                     <option value="阳光房">阳光房</option>
+                    <option value="阶梯教室">阶梯教室</option>
                   </select>
                 </td>
                 <td className="px-4 py-2 border">
@@ -261,7 +268,7 @@ const AdminCalendarPage = () => {
                     style={{ backgroundColor: "rgb(51, 140, 195)" }}
                   >
                     <option value="" disabled>选择班级</option>
-                    {clusters.map((cluster) => (
+                    {activeClusters.map((cluster) => (
                       <option key={cluster._id} value={cluster._id}>{cluster.name}</option>
                     ))}
                   </select>

@@ -147,7 +147,11 @@ const Navbar = () => {
             </svg>
           </summary>
           <ul className="menu dropdown-content bg-base-100 rounded-box z-[1] w-36 p-2 shadow">
-            <li><a>我的账户</a></li>
+            <li>
+              <Link to="/myinfo" onClick={() => handlePageClick('/myinfo')}>
+                我的账户
+              </Link>
+            </li>
             <li><Link to="/login" onClick={(e) => {
               e.preventDefault();
               logout();

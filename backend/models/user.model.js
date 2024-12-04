@@ -5,21 +5,26 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "isStudent",
     },
-    // isAdmin isTeacher isStudent
     username:{
         type: String,
         required: true,
         unique: true,
     },
+    email: {
+        type: String,
+        unique: true,
+      },
     password:{
         type: String,
         required: true,
         minLength: 6,
     },
-    profileImg:{
+    profileImg: {
         type: String,
-        default: "",
+        default: '/assets/Banana.jpg',
     },
+
+    registerDate: { type: Date, default: Date.now },
 
     inCluster:[
         {
