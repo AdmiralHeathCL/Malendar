@@ -189,11 +189,11 @@ const Navbar = () => {
             </li>
           )}
 
-          <li>
+          {/* <li>
             <Link to="/page3" onClick={() => handlePageClick('/page3')}>
               其他页面
             </Link>
-          </li>
+          </li> */}
 
         </ul>
       </div>

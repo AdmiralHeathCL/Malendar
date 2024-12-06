@@ -61,7 +61,7 @@ const MyInfoPage = () => {
       <h1 className="text-2xl font-bold mb-6">我的信息</h1>
 
       {/* User Info Section */}
-      <div className="bg-base-200 p-6 rounded-lg shadow mb-8">
+      <div className="bg-base-200 p-6 rounded-lg shadow mb-3">
         <h2 className="text-xl font-semibold mb-4">用户信息</h2>
         <p>
           <strong>用户名:</strong> {username}
