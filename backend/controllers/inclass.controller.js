@@ -4,20 +4,30 @@ import Cluster from "../models/cluster.model.js";
 import mongoose from "mongoose";
 
 export const getInClassByCluster = async (req, res) => {
-    const { clusterId } = req.params;
-  
-    try {
-      const inClassItems = await Inclass.find({ classcodes: clusterId });
-      if (!inClassItems || inClassItems.length === 0) {
-        return res.status(200).json({ success: true, data: [] }); // Return an empty array instead of 404
-      }
-  
-      res.status(200).json({ success: true, data: inClassItems });
-    } catch (error) {
-      console.error('Error fetching in-class items:', error.message);
-      res.status(500).json({ success: false, message: 'Server Error' });
+  const { clusterId } = req.params;
+
+  try {
+    const inClassItems = await Inclass.find({ classcodes: clusterId })
+      .populate({
+        path: "teachers",
+        select: "username", // Include only the username field
+      })
+      .populate({
+        path: "classcodes",
+        select: "name", // Include cluster name if needed
+      });
+
+    if (!inClassItems || inClassItems.length === 0) {
+      return res.status(200).json({ success: true, data: [] }); // Return empty array instead of 404
     }
-  };
+
+    res.status(200).json({ success: true, data: inClassItems });
+  } catch (error) {
+    console.error("Error fetching in-class items:", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
 
 export const getInclasses = async (req, res) => {
     try {

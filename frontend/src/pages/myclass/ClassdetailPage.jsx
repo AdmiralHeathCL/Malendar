@@ -15,6 +15,7 @@ const ClassDetailPage = () => {
   const [searchTerm, setSearchTerm] = useState(""); // Search term for filtering users
   const [error, setError] = useState(null);
   const [events, setEvents] = useState([]); // State to store the events for FullCalendar
+  const [currentView, setCurrentView] = useState("dayGridMonth"); // Track the current calendar view
 
   // Fetch the authenticated user
   const { data: authUser } = useQuery({
@@ -65,6 +66,7 @@ const ClassDetailPage = () => {
             end: `${classItem.date}T${classItem.endtime}`, // Format as YYYY-MM-DDTHH:mm
             description: classItem.description, // Additional info
             classroom: classItem.classroom, // Classroom info
+            teacher: classItem.teachers.map((t) => t.username).join(", "), // Extract usernames
             classType: classItem.type, // Class type for custom styling
           }));
 
@@ -78,57 +80,6 @@ const ClassDetailPage = () => {
     fetchEvents();
   }, [id]);
 
-  // Mutation to add/remove student
-  const { mutate: addStudent } = useMutation({
-    mutationFn: async (studentId) => {
-      const response = await fetch(`/api/clusters/${id}/addStudent`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ studentId }),
-      });
-
-      if (!response.ok) throw new Error("Failed to add member to class");
-
-      toast.success("Member added");
-
-      // Update the members and non-members immediately
-      const addedMember = nonMembers.find((user) => user._id === studentId);
-      setMembers((prevMembers) => [...prevMembers, addedMember]);
-      setNonMembers((prevNonMembers) =>
-        prevNonMembers.filter((user) => user._id !== studentId)
-      );
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const { mutate: removeStudent } = useMutation({
-    mutationFn: async (studentId) => {
-      const response = await fetch(`/api/clusters/${id}/removeStudent`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ studentId }),
-      });
-
-      if (!response.ok) throw new Error("Failed to remove member from class");
-
-      toast.success("Member removed");
-
-      // Update the members and non-members immediately
-      const removedMember = members.find((user) => user._id === studentId);
-      setMembers((prevMembers) => prevMembers.filter((user) => user._id !== studentId));
-      setNonMembers((prevNonMembers) => [...prevNonMembers, removedMember]);
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
   if (error) return <div>Error: {error}</div>;
 
   return (
@@ -140,84 +91,86 @@ const ClassDetailPage = () => {
       {/* Calendar Section */}
       <div className="flex gap-4">
         <div className="flex-grow p-4 shadow rounded-lg" style={{ backgroundColor: "rgb(51, 140, 195)" }}>
-        <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
-          events={events} // Pass the formatted events
-          eventClassNames={(event) => {
-            // Apply custom class based on the event type
-            switch (event.event.extendedProps.classType) {
-              case "阅读":
-                return ["event-reading"];
-              case "写作":
-                return ["event-writing"];
-              case "口语":
-                return ["event-speaking"];
-              case "听力":
-                return ["event-listening"];
-              default:
-                return ["event-default"];
-            }
-          }}
-          headerToolbar={{
-            left: "prev,next today",
-            center: "title",
-            right: "dayGridMonth,timeGridWeek,timeGridDay",
-          }}
-          slotMinTime="06:00:00"
-          slotMaxTime="24:00:00"
-          eventTimeFormat={{
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          }}
-          slotLabelFormat={{
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          }}
-          eventContent={(arg) => {
-            // Get extendedProps for custom fields
-            const { extendedProps, title } = arg.event;
-            const { classroom, teacher, description } = extendedProps;
+          <FullCalendar
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView={currentView}
+            events={events} // Pass the formatted events
+            eventClassNames={(event) => {
+              // Apply custom class based on the event type
+              switch (event.event.extendedProps.classType) {
+                case "阅读":
+                  return ["event-reading"];
+                case "写作":
+                  return ["event-writing"];
+                case "口语":
+                  return ["event-speaking"];
+                case "听力":
+                  return ["event-listening"];
+                default:
+                  return ["event-default"];
+              }
+            }}
+            headerToolbar={{
+              left: "prev,next today",
+              center: "title",
+              right: "dayGridMonth,timeGridWeek,timeGridDay",
+            }}
+            slotMinTime="06:00:00"
+            slotMaxTime="24:00:00"
+            eventOverlap={true} // Allow overlapping events
+            slotEventOverlap={false} // Stack them side by side
+            eventDisplay="block" // Ensure events are displayed as blocks
+            eventTimeFormat={{
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            }}
+            slotLabelFormat={{
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            }}
+            dateClick={(info) => {
+              setCurrentView("timeGridDay"); // Switch to day view
+              setTimeout(() => {
+                const calendarApi = info.view.calendar;
+                calendarApi.changeView("timeGridDay", info.dateStr); // Navigate to the selected day
+              }, 0);
+            }}
+            eventContent={(arg) => {
+              const { extendedProps, title } = arg.event;
+              const { classroom, teacher, description } = extendedProps;
 
-            if (arg.view.type === "dayGridMonth") {
-              // Month view: Keep time and title in the same line
-              return (
-                <div>
-                  <b>{arg.timeText} {title}</b>
-                </div>
-              );
-            }
+              if (arg.view.type === "dayGridMonth") {
+                return (
+                  <div>
+                    <b>{arg.timeText} {title}</b>
+                  </div>
+                );
+              }
 
-            if (arg.view.type === "timeGridWeek") {
-              // Week view: Add classroom and teacher
-              return (
-                <div>
-                  <div><b>{arg.timeText}</b></div>
-                  <div>{title}</div>
-                  <div>{classroom}</div>
-                  <div>{teacher}</div>
-                </div>
-              );
-            }
+              if (arg.view.type === "timeGridWeek") {
+                return (
+                  <div>
+                    <div><b>{arg.timeText}</b></div>
+                    <div><b>{title}</b></div>
+                    <div><b>{teacher}</b></div>
+                    <div><b>{classroom}</b></div>
+                  </div>
+                );
+              }
 
-            if (arg.view.type === "timeGridDay") {
-              // Day view: Add classroom, teacher, and content
-              return (
-                <div>
-                  <div><b>{arg.timeText}</b></div>
-                  <div>{title}</div>
-                  <div>{classroom}</div>
-                  <div>{teacher}</div>
-                  <div>{description}</div>
-                </div>
-              );
-            }
-          }}
-        />
-
-
+              if (arg.view.type === "timeGridDay") {
+                return (
+                  <div>
+                    <div><b>{arg.timeText}</b></div>
+                    <div><b>{title} {teacher} {classroom}</b></div>
+                    <div>{description}</div>
+                  </div>
+                );
+              }
+            }}
+          />
         </div>
 
         {/* Members Section */}
@@ -228,42 +181,11 @@ const ClassDetailPage = () => {
               <li
                 key={member._id}
                 className={authUser?.usertype === "isAdmin" ? "cursor-pointer" : ""}
-                onClick={
-                  authUser?.usertype === "isAdmin" ? () => removeStudent(member._id) : null
-                }
               >
                 {member.username}
               </li>
             ))}
           </ul>
-          {members.length === 0 && <div className="text-white text-center">此班级没有成员</div>}
-
-          {/* Search and Add Members - Only visible to admins */}
-          {authUser?.usertype === "isAdmin" && (
-            <>
-              <h3 className="text-lg font-bold mt-4 mb-2 text-white">搜索并添加成员</h3>
-              <input
-                type="text"
-                className="input input-bordered w-full mb-4"
-                placeholder="搜索成员"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <ul className="list-disc pl-4 text-white">
-                {nonMembers
-                  .filter((user) => user.username.toLowerCase().includes(searchTerm.toLowerCase()))
-                  .map((user) => (
-                    <li
-                      key={user._id}
-                      className="cursor-pointer"
-                      onClick={() => addStudent(user._id)}
-                    >
-                      {user.username}
-                    </li>
-                  ))}
-              </ul>
-            </>
-          )}
         </div>
       </div>
     </div>
