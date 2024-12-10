@@ -35,8 +35,8 @@ body.overflow-hidden {
 }
 
 .event-speaking {
-  background-color: #348bd2;
-  border-color: #348bd2;
+  background-color: #2976b4;
+  border-color: #2976b4;
   color: white;
 }
 
@@ -109,3 +109,6 @@ body.overflow-hidden {
   html {
     scrollbar-width: none;
   }
+
+
+  

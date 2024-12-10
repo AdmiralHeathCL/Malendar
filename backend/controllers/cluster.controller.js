@@ -113,7 +113,6 @@ export const deleteCluster = async (req, res) => {
     }
 };
 
-
 export const addStudentToCluster = async (req, res) => {
     const { id } = req.params; // Cluster ID
     const { studentId } = req.body; // Student to add
@@ -133,6 +132,11 @@ export const addStudentToCluster = async (req, res) => {
       if (!cluster.students.includes(studentId)) {
         cluster.students.push(studentId);
         await cluster.save();
+  
+        // Also update the User model to reflect the student's membership in the cluster
+        student.inCluster.push(id);
+        await student.save();
+  
         return res.status(200).json({ success: true, data: cluster });
       } else {
         return res.status(400).json({ success: false, message: "Student already in cluster" });
@@ -142,31 +146,36 @@ export const addStudentToCluster = async (req, res) => {
       return res.status(500).json({ success: false, message: "Server error" });
     }
   };
+
+  export const removeStudentFromCluster = async (req, res) => {
+    const { id } = req.params; // Cluster ID
+    const { studentId } = req.body; // Student to remove
   
-export const removeStudentFromCluster = async (req, res) => {
-    const { id } = req.params; // cluster id
-    const { studentId } = req.body; // id of the student to remove
-
     try {
-        const cluster = await Cluster.findById(id);
-        if (!cluster) {
-            return res.status(404).json({ success: false, message: "Cluster not found" });
+      const cluster = await Cluster.findById(id);
+      if (!cluster) {
+        return res.status(404).json({ success: false, message: "Cluster not found" });
+      }
+  
+      // Remove student from the cluster's students array
+      if (cluster.students.includes(studentId)) {
+        cluster.students.pull(studentId);
+        await cluster.save();
+  
+        // Also update the User model to reflect that the student is no longer in the cluster
+        const student = await User.findById(studentId);
+        if (student) {
+          student.inCluster.pull(id);
+          await student.save();
         }
-
-        // Remove student if present
-        if (cluster.students.includes(studentId)) {
-            cluster.students.pull(studentId);
-            await cluster.save();
-
-            // Update User model
-            await User.findByIdAndUpdate(studentId, { $pull: { inCluster: id } });
-
-            return res.status(200).json({ success: true, data: cluster });
-        } else {
-            return res.status(400).json({ success: false, message: "Student not in cluster" });
-        }
+  
+        return res.status(200).json({ success: true, data: cluster });
+      } else {
+        return res.status(400).json({ success: false, message: "Student not in cluster" });
+      }
     } catch (error) {
-        console.error("Error in removing student:", error.message);
-        res.status(500).json({ success: false, message: "Server Error" });
+      console.error("Error removing student from cluster:", error.message);
+      res.status(500).json({ success: false, message: "Server Error" });
     }
-};
+  };
+  

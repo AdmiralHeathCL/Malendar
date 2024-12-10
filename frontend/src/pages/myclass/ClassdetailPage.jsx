@@ -1,221 +1,268 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { useQuery, useMutation } from '@tanstack/react-query';
-import toast from 'react-hot-toast';
 
 const ClassDetailPage = () => {
-  const { id } = useParams(); // Get the cluster ID from URL parameters
+  const { id } = useParams(); // Get the cluster ID from URL
   const [className, setClassName] = useState(""); // State to store the class name
-  const [inClassItems, setInClassItems] = useState([]); // State to store the in-class items
   const [members, setMembers] = useState([]); // State to store the members of the cluster
-  const [nonClassMembers, setNonClassMembers] = useState([]); // State to store the users not in the class
-  const [filteredMembers, setFilteredMembers] = useState([]); // Filtered members for the search bar
-  const [searchTerm, setSearchTerm] = useState(""); // Search term for filtering members
+  const [nonMembers, setNonMembers] = useState([]); // State for non-members
+  const [searchTerm, setSearchTerm] = useState(""); // Search term for filtering users
   const [error, setError] = useState(null);
+  const [events, setEvents] = useState([]); // State to store the events for FullCalendar
 
   // Fetch the authenticated user
   const { data: authUser } = useQuery({
-    queryKey: ['authUser'],
+    queryKey: ["authUser"],
     queryFn: async () => {
-      const res = await fetch("/api/auth/user");
+      const res = await fetch("/api/auth/me");
       if (!res.ok) throw new Error("Failed to fetch authenticated user");
       return res.json();
     },
   });
 
-  // Fetch cluster details to get the name and members
-  const fetchClassDetails = async () => {
-    try {
-      const response = await fetch(`/api/clusters/${id}`);
-      if (!response.ok) throw new Error("Failed to fetch class details");
-      const data = await response.json();
-      setClassName(data.data.name);
-      setMembers(data.data.students); // Use populated 'students' field
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  // Fetch in-class items associated with this cluster
-  const fetchInClassItems = async () => {
-    try {
-      const response = await fetch(`/api/inclasses/cluster/${id}`);
-      if (!response.ok) throw new Error("Failed to fetch in-class items");
-      const data = await response.json();
-      setInClassItems(
-        data.data.map((item) => ({
-          title: item.type,
-          start: `${item.date}T${item.starttime}`,
-          end: `${item.date}T${item.endtime}`,
-          extendedProps: {
-            description: item.description,
-            classroom: item.classroom,
-            type: item.type,
-            endtime: item.endtime,
-          },
-        }))
-      );
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  // Fetch all users to get the list of non-class members
-  const fetchAllUsers = async () => {
-    try {
-      const response = await fetch("/api/users/all");
-      if (!response.ok) throw new Error("Failed to fetch all users");
-      const data = await response.json();
-
-      // Filter users who are NOT in the current class
-      const nonClassUsers = data.data.filter(
-        (user) => !members.some((member) => member._id === user._id)
-      );
-
-      setNonClassMembers(nonClassUsers); // Set users not in class
-      setFilteredMembers(nonClassUsers); // Initialize the filtered list with all non-class members
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
+  // Fetch cluster details to get the name, members, and non-members
   useEffect(() => {
+    const fetchClassDetails = async () => {
+      try {
+        const response = await fetch(`/api/clusters/${id}`);
+        if (!response.ok) throw new Error("Failed to fetch class details");
+
+        const data = await response.json();
+        setClassName(data.data.name);
+        setMembers(data.data.students); // Class members
+        // Fetch non-members (those not in the current class)
+        const nonMembersResponse = await fetch("/api/users/students");
+        const nonMembersData = await nonMembersResponse.json();
+        const nonMembers = nonMembersData.data.filter(
+          (user) => !data.data.students.some((student) => student._id === user._id)
+        );
+        setNonMembers(nonMembers); // Students not in the current class
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+
     fetchClassDetails();
-    fetchInClassItems();
-    fetchAllUsers();
   }, [id]);
 
-  // Add/remove student from the class
-  const { mutate: addRemoveMember } = useMutation({
-    mutationFn: async (studentId) => {
-      const isMember = members.some((member) => member._id === studentId);
-
+  // Fetch the events (classes) for this cluster and format them for FullCalendar
+  useEffect(() => {
+    const fetchEvents = async () => {
       try {
-        const response = await fetch(`/api/clusters/${id}/members`, {
-          method: isMember ? "DELETE" : "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ studentId }),
-        });
+        const res = await fetch(`/api/inclasses/cluster/${id}`);
+        const data = await res.json();
 
-        if (!response.ok) throw new Error("Failed to update class members");
-        toast.success(isMember ? "Member removed" : "Member added");
-        fetchClassDetails(); // Refresh the class details
-        fetchAllUsers(); // Refresh the non-class users
+        if (res.ok && data?.data) {
+          const formattedEvents = data.data.map((classItem) => ({
+            title: classItem.type, // Use class type as the event title
+            start: `${classItem.date}T${classItem.starttime}`, // Format as YYYY-MM-DDTHH:mm
+            end: `${classItem.date}T${classItem.endtime}`, // Format as YYYY-MM-DDTHH:mm
+            description: classItem.description, // Additional info
+            classroom: classItem.classroom, // Classroom info
+            classType: classItem.type, // Class type for custom styling
+          }));
+
+          setEvents(formattedEvents);
+        }
       } catch (err) {
-        toast.error(err.message);
+        setError("Failed to load events");
       }
+    };
+
+    fetchEvents();
+  }, [id]);
+
+  // Mutation to add/remove student
+  const { mutate: addStudent } = useMutation({
+    mutationFn: async (studentId) => {
+      const response = await fetch(`/api/clusters/${id}/addStudent`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ studentId }),
+      });
+
+      if (!response.ok) throw new Error("Failed to add member to class");
+
+      toast.success("Member added");
+
+      // Update the members and non-members immediately
+      const addedMember = nonMembers.find((user) => user._id === studentId);
+      setMembers((prevMembers) => [...prevMembers, addedMember]);
+      setNonMembers((prevNonMembers) =>
+        prevNonMembers.filter((user) => user._id !== studentId)
+      );
+    },
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 
-  // Filter members based on the search term
-  useEffect(() => {
-    const filtered = nonClassMembers.filter((member) =>
-      member.username.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredMembers(filtered);
-  }, [searchTerm, nonClassMembers]);
+  const { mutate: removeStudent } = useMutation({
+    mutationFn: async (studentId) => {
+      const response = await fetch(`/api/clusters/${id}/removeStudent`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ studentId }),
+      });
+
+      if (!response.ok) throw new Error("Failed to remove member from class");
+
+      toast.success("Member removed");
+
+      // Update the members and non-members immediately
+      const removedMember = members.find((user) => user._id === studentId);
+      setMembers((prevMembers) => prevMembers.filter((user) => user._id !== studentId));
+      setNonMembers((prevNonMembers) => [...prevNonMembers, removedMember]);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
 
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="w-full px-8 py-10 mt-12">
+    <div className="w-full px-8 py-14">
+      <div className="px-4 py-2">
+        <h1 className="text-2xl font-bold">{className}</h1>
+      </div>
+
+      {/* Calendar Section */}
       <div className="flex gap-4">
-        {/* Left Column: Calendar */}
-        <div
-          className="flex-grow p-4 shadow rounded-lg"
-          style={{ backgroundColor: "rgb(51, 140, 195)" }}
-        >
-          <h1 className="text-2xl font-bold mb-4">{className}</h1>
-          {inClassItems.length === 0 ? (
-            <div className="text-2xl font-medium text-center">此班级没有课程</div>
-          ) : (
-            <FullCalendar
-              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-              initialView="dayGridMonth"
-              events={inClassItems}
-              headerToolbar={{
-                left: "prev,next today",
-                center: "title",
-                right: "dayGridMonth,timeGridWeek,timeGridDay",
-              }}
-              slotMinTime="06:00:00"
-              slotMaxTime="24:00:00"
-              eventTimeFormat={{
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: false,
-              }}
-              slotLabelFormat={{
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: false,
-              }}
-            />
-          )}
+        <div className="flex-grow p-4 shadow rounded-lg" style={{ backgroundColor: "rgb(51, 140, 195)" }}>
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          events={events} // Pass the formatted events
+          eventClassNames={(event) => {
+            // Apply custom class based on the event type
+            switch (event.event.extendedProps.classType) {
+              case "阅读":
+                return ["event-reading"];
+              case "写作":
+                return ["event-writing"];
+              case "口语":
+                return ["event-speaking"];
+              case "听力":
+                return ["event-listening"];
+              default:
+                return ["event-default"];
+            }
+          }}
+          headerToolbar={{
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,timeGridDay",
+          }}
+          slotMinTime="06:00:00"
+          slotMaxTime="24:00:00"
+          eventTimeFormat={{
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          }}
+          slotLabelFormat={{
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          }}
+          eventContent={(arg) => {
+            // Get extendedProps for custom fields
+            const { extendedProps, title } = arg.event;
+            const { classroom, teacher, description } = extendedProps;
+
+            if (arg.view.type === "dayGridMonth") {
+              // Month view: Keep time and title in the same line
+              return (
+                <div>
+                  <b>{arg.timeText} {title}</b>
+                </div>
+              );
+            }
+
+            if (arg.view.type === "timeGridWeek") {
+              // Week view: Add classroom and teacher
+              return (
+                <div>
+                  <div><b>{arg.timeText}</b></div>
+                  <div>{title}</div>
+                  <div>{classroom}</div>
+                  <div>{teacher}</div>
+                </div>
+              );
+            }
+
+            if (arg.view.type === "timeGridDay") {
+              // Day view: Add classroom, teacher, and content
+              return (
+                <div>
+                  <div><b>{arg.timeText}</b></div>
+                  <div>{title}</div>
+                  <div>{classroom}</div>
+                  <div>{teacher}</div>
+                  <div>{description}</div>
+                </div>
+              );
+            }
+          }}
+        />
+
+
         </div>
 
-        {/* Right Column: Members and Add/Remove Functionality */}
-        <div
-          className="w-1/3 p-4 shadow rounded-lg overflow-auto"
-          style={{
-            backgroundColor: "rgb(51, 140, 195)",
-            maxHeight: "500px", // Shorten the height of the stack
-            padding: "20px",
-          }}
-        >
-          {/* Current Members List */}
-          <h2 className="text-lg font-bold mb-4 text-white text-center">当前成员</h2>
-          {members.length > 0 ? (
-            <ul className="list-disc pl-4">
-              {members.map((member) => (
-                <li
-                  key={member._id}
-                  className="text-white cursor-pointer hover:bg-gray-200 p-2"
-                  onClick={() => addRemoveMember(member._id)} // Clicking name removes from class
-                >
-                  {member.username}
-                  {member.usertype === "isTeacher" && (
-                    <span className="text-blue-500 font-bold"> (教师)</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="text-white text-center">此班级没有成员</div>
-          )}
+        {/* Members Section */}
+        <div className="w-1/3 p-4 shadow rounded-lg overflow-auto" style={{ backgroundColor: "rgb(51, 140, 195)" }}>
+          <h2 className="text-lg font-bold mb-4 text-white">班级成员</h2>
+          <ul className="list-disc pl-4 text-white">
+            {members.map((member) => (
+              <li
+                key={member._id}
+                className={authUser?.usertype === "isAdmin" ? "cursor-pointer" : ""}
+                onClick={
+                  authUser?.usertype === "isAdmin" ? () => removeStudent(member._id) : null
+                }
+              >
+                {member.username}
+              </li>
+            ))}
+          </ul>
+          {members.length === 0 && <div className="text-white text-center">此班级没有成员</div>}
 
-          {/* Search Bar and Add/Remove Members */}
+          {/* Search and Add Members - Only visible to admins */}
           {authUser?.usertype === "isAdmin" && (
-            <div className="mt-6">
-              <h2 className="text-lg font-bold text-white">管理成员</h2>
+            <>
+              <h3 className="text-lg font-bold mt-4 mb-2 text-white">搜索并添加成员</h3>
               <input
                 type="text"
+                className="input input-bordered w-full mb-4"
+                placeholder="搜索成员"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="搜索学生或教师"
-                className="input input-bordered w-full mt-2"
               />
-              <ul className="list-disc pl-4 mt-2">
-                {filteredMembers.map((member) => (
-                  <li
-                    key={member._id}
-                    className="cursor-pointer hover:bg-gray-200 p-2"
-                    onClick={() => addRemoveMember(member._id)} // Clicking name adds to class
-                  >
-                    {member.username}
-                    {member.usertype === "isTeacher" && (
-                      <span className="text-blue-500 font-bold"> (教师)</span>
-                    )}
-                  </li>
-                ))}
+              <ul className="list-disc pl-4 text-white">
+                {nonMembers
+                  .filter((user) => user.username.toLowerCase().includes(searchTerm.toLowerCase()))
+                  .map((user) => (
+                    <li
+                      key={user._id}
+                      className="cursor-pointer"
+                      onClick={() => addStudent(user._id)}
+                    >
+                      {user.username}
+                    </li>
+                  ))}
               </ul>
-            </div>
+            </>
           )}
         </div>
       </div>

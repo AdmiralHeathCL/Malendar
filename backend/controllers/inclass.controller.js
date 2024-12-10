@@ -137,15 +137,43 @@ export const deleteInclass = async (req, res) => {
 };
 
 export const getInClassByDate = async (req, res) => {
-    const { date } = req.params;
-    try {
+  const { date } = req.params; // the date will be in the format YYYYMMDD
+  try {
       const inClasses = await Inclass.find({ date: date });
       if (!inClasses || inClasses.length === 0) {
-        return res.status(200).json({ success: true, data: [] });
+          return res.status(200).json({ success: true, data: [] });
       }
       res.status(200).json({ success: true, data: inClasses });
-    } catch (error) {
+  } catch (error) {
       console.error("Error fetching classes by date:", error.message);
+      res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+export const deleteClassesByDate = async (req, res) => {
+    const { date } = req.params; // The date will be in the format YYYYMMDD
+  
+    try {
+      // Find all classes for the given date
+      const classesToDelete = await Inclass.find({ date: date });
+  
+      if (!classesToDelete || classesToDelete.length === 0) {
+        // If no classes are found, return a success response
+        return res.status(200).json({ success: true, message: "No classes found for the specified date" });
+      }
+  
+      // Delete all classes for the given date
+      await Inclass.deleteMany({ date: date });
+  
+      // Remove references from User and Cluster models
+      const classIds = classesToDelete.map((cls) => cls._id);
+      await User.updateMany({ inClass: { $in: classIds } }, { $pull: { inClass: { $in: classIds } } });
+      await Cluster.updateMany({ inClass: { $in: classIds } }, { $pull: { inClass: { $in: classIds } } });
+  
+      res.status(200).json({ success: true, message: "Classes deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting classes by date:", error.message);
       res.status(500).json({ success: false, message: "Server Error" });
     }
   };
+  
