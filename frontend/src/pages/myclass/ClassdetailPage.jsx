@@ -80,6 +80,57 @@ const ClassDetailPage = () => {
     fetchEvents();
   }, [id]);
 
+  const { mutate: addStudent } = useMutation({
+    mutationFn: async (studentId) => {
+      const response = await fetch(`/api/clusters/${id}/addStudent`, { // Fixed: Correct URL string
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ studentId }),
+      });
+  
+      if (!response.ok) throw new Error("Failed to add member to class");
+  
+      toast.success("Member added");
+  
+      // Update the members and non-members immediately
+      const addedMember = nonMembers.find((user) => user._id === studentId);
+      setMembers((prevMembers) => [...prevMembers, addedMember]);
+      setNonMembers((prevNonMembers) =>
+        prevNonMembers.filter((user) => user._id !== studentId)
+      );
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+  
+  const { mutate: removeStudent } = useMutation({
+    mutationFn: async (studentId) => {
+      const response = await fetch(`/api/clusters/${id}/removeStudent`, { // Fixed: Correct URL string
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ studentId }),
+      });
+  
+      if (!response.ok) throw new Error("Failed to remove member from class");
+  
+      toast.success("Member removed");
+  
+      // Update the members and non-members immediately
+      const removedMember = members.find((user) => user._id === studentId);
+      setMembers((prevMembers) => prevMembers.filter((user) => user._id !== studentId));
+      setNonMembers((prevNonMembers) => [...prevNonMembers, removedMember]);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+  
+
   if (error) return <div>Error: {error}</div>;
 
   return (
@@ -181,11 +232,42 @@ const ClassDetailPage = () => {
               <li
                 key={member._id}
                 className={authUser?.usertype === "isAdmin" ? "cursor-pointer" : ""}
+                onClick={
+                  authUser?.usertype === "isAdmin" ? () => removeStudent(member._id) : null
+                }
               >
                 {member.username}
               </li>
             ))}
           </ul>
+          {members.length === 0 && <div className="text-white text-center">此班级没有成员</div>}
+
+          {/* Search and Add Members - Only visible to admins */}
+          {authUser?.usertype === "isAdmin" && (
+            <>
+              <h3 className="text-lg font-bold mt-4 mb-2 text-white">搜索并添加成员</h3>
+              <input
+                type="text"
+                className="input input-bordered w-full mb-4"
+                placeholder="搜索成员"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <ul className="list-disc pl-4 text-white">
+                {nonMembers
+                  .filter((user) => user.username.toLowerCase().includes(searchTerm.toLowerCase()))
+                  .map((user) => (
+                    <li
+                      key={user._id}
+                      className="cursor-pointer"
+                      onClick={() => addStudent(user._id)}
+                    >
+                      {user.username}
+                    </li>
+                  ))}
+              </ul>
+            </>
+          )}
         </div>
       </div>
     </div>
