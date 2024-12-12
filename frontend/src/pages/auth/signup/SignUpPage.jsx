@@ -44,6 +44,10 @@ const SignUpPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!formData.username.trim() || !formData.password.trim()) {
+      toast.error("用户名和密码不能为空");
+      return;
+    }
     mutate(formData);
   };
 

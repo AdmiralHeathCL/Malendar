@@ -67,7 +67,7 @@ const ClassDetailPage = () => {
             description: classItem.description, // Additional info
             classroom: classItem.classroom, // Classroom info
             teacher: classItem.teachers.map((t) => t.username).join(", "), // Extract usernames
-            classType: classItem.type, // Class type for custom styling
+            type: classItem.type, // Class type for custom styling
           }));
 
           setEvents(formattedEvents);
@@ -82,18 +82,18 @@ const ClassDetailPage = () => {
 
   const { mutate: addStudent } = useMutation({
     mutationFn: async (studentId) => {
-      const response = await fetch(`/api/clusters/${id}/addStudent`, { // Fixed: Correct URL string
+      const response = await fetch(`/api/clusters/${id}/addStudent`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ studentId }),
       });
-  
+
       if (!response.ok) throw new Error("Failed to add member to class");
-  
+
       toast.success("Member added");
-  
+
       // Update the members and non-members immediately
       const addedMember = nonMembers.find((user) => user._id === studentId);
       setMembers((prevMembers) => [...prevMembers, addedMember]);
@@ -105,21 +105,21 @@ const ClassDetailPage = () => {
       toast.error(error.message);
     },
   });
-  
+
   const { mutate: removeStudent } = useMutation({
     mutationFn: async (studentId) => {
-      const response = await fetch(`/api/clusters/${id}/removeStudent`, { // Fixed: Correct URL string
+      const response = await fetch(`/api/clusters/${id}/removeStudent`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ studentId }),
       });
-  
+
       if (!response.ok) throw new Error("Failed to remove member from class");
-  
+
       toast.success("Member removed");
-  
+
       // Update the members and non-members immediately
       const removedMember = members.find((user) => user._id === studentId);
       setMembers((prevMembers) => prevMembers.filter((user) => user._id !== studentId));
@@ -129,7 +129,6 @@ const ClassDetailPage = () => {
       toast.error(error.message);
     },
   });
-  
 
   if (error) return <div>Error: {error}</div>;
 
@@ -148,7 +147,7 @@ const ClassDetailPage = () => {
             events={events} // Pass the formatted events
             eventClassNames={(event) => {
               // Apply custom class based on the event type
-              switch (event.event.extendedProps.classType) {
+              switch (event.event.extendedProps.type) {
                 case "阅读":
                   return ["event-reading"];
                 case "写作":
@@ -160,6 +159,13 @@ const ClassDetailPage = () => {
                 default:
                   return ["event-default"];
               }
+            }}
+            eventDidMount={(info) => {
+              info.el.title = `${new Date(info.event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}-${new Date(info.event.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}\n` +
+                `${info.event.title}\n` +
+                `${info.event.extendedProps.classroom}\n` +
+                `${info.event.extendedProps.teacher}\n` +
+                `${info.event.extendedProps.description}`;
             }}
             headerToolbar={{
               left: "prev,next today",
@@ -200,26 +206,13 @@ const ClassDetailPage = () => {
                 );
               }
 
-              if (arg.view.type === "timeGridWeek") {
-                return (
-                  <div>
-                    <div><b>{arg.timeText}</b></div>
-                    <div><b>{title}</b></div>
-                    <div><b>{teacher}</b></div>
-                    <div><b>{classroom}</b></div>
-                  </div>
-                );
-              }
-
-              if (arg.view.type === "timeGridDay") {
-                return (
-                  <div>
-                    <div><b>{arg.timeText}</b></div>
-                    <div><b>{title} {teacher} {classroom}</b></div>
-                    <div>{description}</div>
-                  </div>
-                );
-              }
+              return (
+                <div>
+                  <div><b>{arg.timeText}</b></div>
+                  <div><b>{title} {classroom} {teacher}</b></div>
+                  <div>{description}</div>
+                </div>
+              );
             }}
           />
         </div>

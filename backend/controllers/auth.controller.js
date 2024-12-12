@@ -6,14 +6,14 @@ export const signup = async (req, res) => {
     try {
         const { username, password, usertype } = req.body;
 
-        if (!username || !password || !usertype) {
+        if (!username || !password) {
             return res.status(400).json({ error: "请提供所有信息" });
         }
 
-        const validUserTypes = ["isAdmin", "isTeacher", "isStudent"];
-        if (!validUserTypes.includes(usertype)) {
-            return res.status(400).json({ error: "无效的用户类型" });
-        }
+        // const validUserTypes = ["isAdmin", "isTeacher", "isStudent"];
+        // if (!validUserTypes.includes(usertype)) {
+        //     return res.status(400).json({ error: "无效的用户类型" });
+        // }
 
         const existingUser = await User.findOne({ username });
         if (existingUser) {

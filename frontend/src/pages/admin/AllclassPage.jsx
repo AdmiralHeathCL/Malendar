@@ -108,7 +108,7 @@ const AllclassPage = () => {
   useEffect(() => {
     if (usersData && usersData.data) {
       const filtered = usersData.data
-        .filter(user => (user.usertype === 'isStudent' || user.usertype === 'isTeacher') &&
+        .filter(user => (user.usertype === 'isStudent') &&
           user.username.toLowerCase().startsWith(searchTerm.toLowerCase())) // Match names from the beginning
         .sort((a, b) => a.username.localeCompare(b.username)); // Sort alphabetically
       setFilteredStudents(filtered);
@@ -251,7 +251,7 @@ const AllclassPage = () => {
                     <input
                       type="text"
                       className="grow"
-                      placeholder="搜索学生或教师"
+                      placeholder="搜索学生"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
