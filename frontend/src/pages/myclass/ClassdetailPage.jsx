@@ -218,50 +218,75 @@ const ClassDetailPage = () => {
         </div>
 
         {/* Members Section */}
-        <div className="w-1/3 p-4 shadow rounded-lg overflow-auto" style={{ backgroundColor: "rgb(51, 140, 195)" }}>
-          <h2 className="text-lg font-bold mb-4 text-white">班级成员</h2>
-          <ul className="list-disc pl-4 text-white">
-            {members.map((member) => (
-              <li
-                key={member._id}
-                className={authUser?.usertype === "isAdmin" ? "cursor-pointer" : ""}
-                onClick={
-                  authUser?.usertype === "isAdmin" ? () => removeStudent(member._id) : null
-                }
-              >
-                {member.username}
-              </li>
-            ))}
-          </ul>
-          {members.length === 0 && <div className="text-white text-center">此班级没有成员</div>}
-
-          {/* Search and Add Members - Only visible to admins */}
-          {authUser?.usertype === "isAdmin" && (
-            <>
-              <h3 className="text-lg font-bold mt-4 mb-2 text-white">搜索并添加成员</h3>
-              <input
-                type="text"
-                className="input input-bordered w-full mb-4"
-                placeholder="搜索成员"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <ul className="list-disc pl-4 text-white">
-                {nonMembers
-                  .filter((user) => user.username.toLowerCase().includes(searchTerm.toLowerCase()))
-                  .map((user) => (
-                    <li
-                      key={user._id}
-                      className="cursor-pointer"
-                      onClick={() => addStudent(user._id)}
-                    >
-                      {user.username}
-                    </li>
-                  ))}
-              </ul>
-            </>
-          )}
+<div className="w-1/3 p-4 shadow rounded-lg overflow-auto" style={{ backgroundColor: "rgb(51, 140, 195)" }}>
+  <h2 className="text-lg font-bold mb-4 text-white">班级成员</h2>
+  <ul className="list-disc pl-4 text-white">
+    {members.map((member) => (
+      <li
+        key={member._id}
+        className={`flex items-center gap-3 mb-2 ${
+          authUser?.usertype === "isAdmin" ? "cursor-pointer" : ""
+        }`}
+        onClick={authUser?.usertype === "isAdmin" ? () => removeStudent(member._id) : null}
+      >
+        {/* Avatar */}
+        <div
+          className="w-8 h-8 flex items-center justify-center rounded-full text-white font-bold"
+          style={{
+            backgroundColor: member.profileImg || "#ccc", // Use `profileImg` or fallback to gray
+            fontSize: "0.8rem", // Font size for single character
+            textTransform: "uppercase", // Capitalize the letter
+          }}
+        >
+          {member.username[0]} {/* Display the first letter of the username */}
         </div>
+        {/* Username */}
+        <span>{member.username}</span>
+      </li>
+    ))}
+  </ul>
+  {members.length === 0 && <div className="text-white text-center">此班级没有成员</div>}
+
+  {/* Search and Add Members - Only visible to admins */}
+  {authUser?.usertype === "isAdmin" && (
+    <>
+      <h3 className="text-lg font-bold mt-4 mb-2 text-white">搜索并添加成员</h3>
+      <input
+        type="text"
+        className="input input-bordered w-full mb-4"
+        placeholder="搜索成员"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+      <ul className="list-disc pl-4 text-white">
+        {nonMembers
+          .filter((user) => user.username.toLowerCase().includes(searchTerm.toLowerCase()))
+          .map((user) => (
+            <li
+              key={user._id}
+              className="flex items-center gap-3 mb-2 cursor-pointer"
+              onClick={() => addStudent(user._id)}
+            >
+              {/* Avatar */}
+              <div
+                className="w-8 h-8 flex items-center justify-center rounded-full text-white font-bold"
+                style={{
+                  backgroundColor: user.profileImg || "#ccc", // Use `profileImg` or fallback to gray
+                  fontSize: "0.8rem", // Font size for single character
+                  textTransform: "uppercase", // Capitalize the letter
+                }}
+              >
+                {user.username[0]} {/* Display the first letter of the username */}
+              </div>
+              {/* Username */}
+              <span>{user.username}</span>
+            </li>
+          ))}
+      </ul>
+    </>
+  )}
+</div>
+
       </div>
     </div>
   );

@@ -30,7 +30,6 @@ const Classcard = ({ title, imageUrl, classId, isActive, handleToggleActive, use
       </figure>
       <div className="card-body p-2 flex flex-col justify-between">
         <h2 className="card-title text-sm">{title}</h2>
-        <p>TEST</p>
         <div className="card-actions justify-end items-end flex flex-col">
           {userType === 'isAdmin' && (
             <div className="flex justify-end items-end space-x-2 mt-4">

@@ -103,7 +103,7 @@ const Navbar = () => {
 
       <div className="flex gap-1">
         {/* Notifications */}
-        <div className="dropdown dropdown-bottom dropdown-end">
+        {/* <div className="dropdown dropdown-bottom dropdown-end">
           <div tabIndex="0" role="button" className="btn btn-ghost btn-circle">
             <div className="indicator">
               <svg
@@ -129,7 +129,7 @@ const Navbar = () => {
               <p>Work in Progress</p>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Account Dropdown */}
         <details className="dropdown dropdown-bottom dropdown-end">
