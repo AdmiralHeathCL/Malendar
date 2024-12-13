@@ -4,55 +4,57 @@ import bcrypt from "bcryptjs";
 
 export const signup = async (req, res) => {
     try {
-        const { username, password, usertype } = req.body;
-
-        if (!username || !password) {
-            return res.status(400).json({ error: "请提供所有信息" });
-        }
-
-        // const validUserTypes = ["isAdmin", "isTeacher", "isStudent"];
-        // if (!validUserTypes.includes(usertype)) {
-        //     return res.status(400).json({ error: "无效的用户类型" });
-        // }
-
-        const existingUser = await User.findOne({ username });
-        if (existingUser) {
-            return res.status(400).json({ error: "该用户已存在" });
-        }
-
-        if (password.length < 6) {
-            return res.status(400).json({ error: "密码最短为6个字符" });
-        }
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        const newUser = new User({
-            username,
-            password: hashedPassword,
-            usertype, // Include usertype here
+      const { username, password, usertype } = req.body;
+  
+      if (!username || !password) {
+        return res.status(400).json({ error: "请提供所有信息" });
+      }
+  
+      const existingUser = await User.findOne({ username });
+      if (existingUser) {
+        return res.status(400).json({ error: "该用户已存在" });
+      }
+  
+      if (password.length < 6) {
+        return res.status(400).json({ error: "密码最短为6个字符" });
+      }
+  
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+  
+      const newUser = new User({
+        username,
+        password: hashedPassword,
+        usertype: usertype || "isStudent", // Default to 'isStudent' if not provided
+      });
+  
+      await newUser.save();
+  
+      // Skip auto-login if created by admin
+      if (req.user && req.user.usertype === "isAdmin") {
+        return res.status(201).json({
+          message: "用户创建成功",
+          user: {
+            _id: newUser._id,
+            username: newUser.username,
+            usertype: newUser.usertype,
+          },
         });
-
-        if (newUser) {
-            generateTokenAndSetCookie(newUser._id, res);
-            await newUser.save();
-
-            res.status(201).json({
-                _id: newUser._id,
-                usertype: newUser.usertype,
-                username: newUser.username,
-                inClass: newUser.inClass,
-                profileImg: newUser.profileImg,
-            });
-        } else {
-            res.status(400).json({ error: "Invalid user data" });
-        }
-
+      }
+  
+      // Auto-login logic for non-admin signups
+      generateTokenAndSetCookie(newUser._id, res);
+      res.status(201).json({
+        _id: newUser._id,
+        usertype: newUser.usertype,
+        username: newUser.username,
+      });
     } catch (error) {
-        console.log("Error in signup controller", error.message);
-        res.status(500).json({ error: "Internal Server Error" });
+      console.log("Error in signup controller:", error.message);
+      res.status(500).json({ error: "Internal Server Error" });
     }
-};
+  };
+  
 
 
 export const login = async (req, res) => {
@@ -116,3 +118,20 @@ export const remove = async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 }
+
+export const removeUserById = async (req, res) => {
+  const { id } = req.params; // Extract the user ID from the route parameters
+
+  try {
+    const user = await User.findByIdAndDelete(id);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({ message: "账户删除成功" });
+  } catch (error) {
+    console.error("Error in removeUserById controller:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};

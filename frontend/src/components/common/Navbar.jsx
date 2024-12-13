@@ -189,11 +189,13 @@ const Navbar = () => {
             </li>
           )}
 
-          {/* <li>
-            <Link to="/page3" onClick={() => handlePageClick('/page3')}>
-              其他页面
-            </Link>
-          </li> */}
+          {authUser?.usertype === "isAdmin" && (
+            <li>
+              <Link to="/users" onClick={() => handlePageClick('/users')}>
+                成员列表
+              </Link>
+            </li>
+          )}
 
         </ul>
       </div>

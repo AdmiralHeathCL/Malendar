@@ -250,7 +250,7 @@ const AdminCalendarPage = () => {
                       style={{ backgroundColor: "white", borderColor: "black", color: "black" }}
                     >
                       <option value="" disabled>选择教室</option>
-                      {[...["VIP1", "VIP2", "VIP3", "阳光房", "阶梯教室"]].sort().map((option) => (
+                      {[...["VIP1", "VIP2", "VIP3", "VIP5", "VIP6", "阳光房", "咨询室", "玻璃办公室", "Robin办公室", "阶梯教室"]].sort().map((option) => (
                         <option key={option} value={option}>{option}</option>
                       ))}
                     </select>
@@ -344,11 +344,11 @@ const AdminCalendarPage = () => {
             ))}
 
             <tr>
-              <td colSpan="8" className="text-right px-4 py-2">
-                <button className="btn btn-primary" onClick={handleAddRow}>
+              <td colSpan="8" className="text-right px-2 py-2">
+                <button className="btn btn-primary" style={{marginRight: '8px' }}onClick={handleAddRow}>
                   添加行
                 </button>
-                <button className="btn btn-success" onClick={handleSaveChanges}>
+                <button className="btn btn-primary" onClick={handleSaveChanges}>
                   保存更改
                 </button>
               </td>

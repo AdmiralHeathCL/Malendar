@@ -181,7 +181,7 @@ const CalendarPage = () => {
             padding: "20px",
           }}
         >
-          <h2 className="text-lg font-bold mb-4 text-white text-center">Upcoming Classes</h2>
+          <h2 className="text-lg font-bold mb-4 text-white text-center">近期课程</h2>
           {upcomingClasses.length > 0 ? (
             <div className="flex flex-col space-y-2">
               {upcomingClasses.map((classItem, index) => (
@@ -203,7 +203,7 @@ const CalendarPage = () => {
               ))}
             </div>
           ) : (
-            <div className="text-white text-center">No upcoming classes.</div>
+            <div className="text-white text-center">无课程</div>
           )}
         </div>
       </div>

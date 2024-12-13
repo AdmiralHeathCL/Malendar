@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -8,7 +8,7 @@ const AdminUserPage = () => {
   const [password, setPassword] = useState("");
   const [usertype, setUsertype] = useState("isStudent"); // Default usertype
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortMethod, setSortMethod] = useState("alphabetical"); // Default to alphabetical sort
+  const [sortMethod, setSortMethod] = useState("usertype");
 
   // Fetch all users
   const { data: usersData, isLoading, error } = useQuery({
@@ -27,6 +27,7 @@ const AdminUserPage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password, usertype }),
+        credentials: "omit", // Prevent modifying admin session cookies
       });
       if (!res.ok) throw new Error("Failed to create user");
     },
@@ -42,11 +43,12 @@ const AdminUserPage = () => {
     },
   });
 
-  // Delete user by ID mutation
+  // Delete user mutation using removeUserById
   const deleteUserMutation = useMutation({
     mutationFn: async (userId) => {
-      const res = await fetch(`/api/users/${userId}`, {
+      const res = await fetch(`/api/auth/users/${userId}`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
       });
       if (!res.ok) throw new Error("Failed to delete user");
     },
@@ -64,15 +66,20 @@ const AdminUserPage = () => {
 
   // Sort users based on sort method
   const sortedUsers = [...(usersData?.data || [])].sort((a, b) => {
-    if (sortMethod === "alphabetical") {
-      return a.username.localeCompare(b.username);
-    } else if (sortMethod === "usertype") {
+    if (sortMethod === "usertype") {
       return a.usertype.localeCompare(b.usertype);
     } else if (sortMethod === "registration") {
       return new Date(a.registerDate) - new Date(b.registerDate);
     }
     return 0;
   });
+
+  // Map usertype to Chinese
+  const userTypeMap = {
+    isStudent: "学生",
+    isTeacher: "教师",
+    isAdmin: "管理员",
+  };
 
   return (
     <div className="w-full p-8">
@@ -133,9 +140,8 @@ const AdminUserPage = () => {
             value={sortMethod}
             onChange={(e) => setSortMethod(e.target.value)}
           >
-            <option value="alphabetical">成员名称</option>
-            <option value="usertype">成员类型</option>
-            <option value="registration">注册时间</option>
+            <option value="usertype">按用户类型排序</option>
+            <option value="registration">按注册时间排序</option>
           </select>
         </div>
         <div className="overflow-auto" style={{ maxHeight: "400px" }}>
@@ -157,11 +163,11 @@ const AdminUserPage = () => {
                   <tr key={user._id}>
                     <td>{user.username}</td>
                     <td>{new Date(user.registerDate).toLocaleDateString()}</td>
-                    <td>{user.usertype}</td>
+                    <td>{userTypeMap[user.usertype] || user.usertype}</td> {/* Display usertype in Chinese */}
                     <td>
                       <button
                         className="btn btn-error btn-sm"
-                        onClick={() => deleteUserMutation.mutate(user._id)}
+                        onClick={() => deleteUserMutation.mutate(user._id)} // Pass user ID to the mutation
                       >
                         删除
                       </button>
