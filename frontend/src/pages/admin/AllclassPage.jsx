@@ -17,7 +17,7 @@ const AllclassPage = () => {
   const { data: authUserData } = useQuery({
     queryKey: ['authUser'],
     queryFn: async () => {
-      const res = await fetch("/api/auth/user");
+      const res = await fetch("/api/auth/me");
       if (!res.ok) throw new Error("Failed to fetch user data");
       return res.json();
     },

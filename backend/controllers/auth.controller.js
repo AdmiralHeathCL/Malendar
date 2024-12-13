@@ -2,59 +2,75 @@ import { generateTokenAndSetCookie } from "../lib/utils/generateTokens.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 
+// Function to generate a random background color from the color pool
+const generateRandomColor = () => {
+  const colorPool = [
+    "#a8dadc", "#ff9f9f", "#9acbff", "#ffcc88", "#f4e1a1", 
+    "#d8b7d1", "#d7b0f7", "#e5d1b4", "#a6c1e1", "#ffbdbd"
+  ];
+  const randomIndex = Math.floor(Math.random() * colorPool.length);
+  return colorPool[randomIndex];
+};
+
 export const signup = async (req, res) => {
-    try {
-      const { username, password, usertype } = req.body;
-  
-      if (!username || !password) {
-        return res.status(400).json({ error: "请提供所有信息" });
-      }
-  
-      const existingUser = await User.findOne({ username });
-      if (existingUser) {
-        return res.status(400).json({ error: "该用户已存在" });
-      }
-  
-      if (password.length < 6) {
-        return res.status(400).json({ error: "密码最短为6个字符" });
-      }
-  
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-  
-      const newUser = new User({
-        username,
-        password: hashedPassword,
-        usertype: usertype || "isStudent", // Default to 'isStudent' if not provided
-      });
-  
-      await newUser.save();
-  
-      // Skip auto-login if created by admin
-      if (req.user && req.user.usertype === "isAdmin") {
-        return res.status(201).json({
-          message: "用户创建成功",
-          user: {
-            _id: newUser._id,
-            username: newUser.username,
-            usertype: newUser.usertype,
-          },
-        });
-      }
-  
-      // Auto-login logic for non-admin signups
-      generateTokenAndSetCookie(newUser._id, res);
-      res.status(201).json({
-        _id: newUser._id,
-        usertype: newUser.usertype,
-        username: newUser.username,
-      });
-    } catch (error) {
-      console.log("Error in signup controller:", error.message);
-      res.status(500).json({ error: "Internal Server Error" });
+  try {
+    const { username, password, usertype } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: "请提供所有信息" });
     }
-  };
-  
+
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ error: "该用户已存在" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: "密码最短为6个字符" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Generate a random background color for the new user
+    const profileImg = generateRandomColor();
+
+    const newUser = new User({
+      username,
+      password: hashedPassword,
+      usertype: usertype || "isStudent", // Default to 'isStudent' if not provided
+      profileImg, // Save the random background color here
+    });
+
+    await newUser.save();
+
+    // Skip auto-login if created by admin
+    if (req.user && req.user.usertype === "isAdmin") {
+      return res.status(201).json({
+        message: "用户创建成功",
+        user: {
+          _id: newUser._id,
+          username: newUser.username,
+          usertype: newUser.usertype,
+          profileImg: newUser.profileImg, // Return the generated profileImg
+        },
+      });
+    }
+
+    // Auto-login logic for non-admin signups
+    generateTokenAndSetCookie(newUser._id, res);
+    res.status(201).json({
+      _id: newUser._id,
+      usertype: newUser.usertype,
+      username: newUser.username,
+      profileImg: newUser.profileImg, // Include the profile image color in the response
+    });
+  } catch (error) {
+    console.log("Error in signup controller:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 
 
 export const login = async (req, res) => {

@@ -30,7 +30,7 @@ const MyclassPage = () => {
   const { data: userData, isLoading: isUserLoading, error: userError } = useQuery({
     queryKey: ['authUser'],
     queryFn: async () => {
-      const res = await fetch("/api/auth/user");
+      const res = await fetch("/api/auth/me");
       if (!res.ok) throw new Error("Failed to fetch user data");
       return res.json();
     }
@@ -51,9 +51,14 @@ const MyclassPage = () => {
   if (isUserLoading || isClusterLoading) return <div className="h-screen flex justify-center items-center">Loading...</div>;
   if (userError || clusterError) return <div>Error: {userError?.message || clusterError?.message}</div>;
 
-  // Now handle the case where no classes are found
+  // If no classes are found or user is not in any cluster
   if (!userData.inCluster || userData.inCluster.length === 0) {
-    return <div className="p-4 text-xl text-center w-full">您当前还没有加入任何班级。</div>;
+    return (
+      <div className="w-full p-8 text-center">
+        <h2 className="text-2xl">您当前还没有加入任何班级。</h2>
+        <p className="mt-4">您可以通过搜索或加入班级来开始。</p>
+      </div>
+    );
   }
 
   // Filter and sort user classes
@@ -69,7 +74,7 @@ const MyclassPage = () => {
       </div>
       
       <div className="flex flex-wrap p-4">
-        {userClasses.length > 0 ? (
+        {userClasses?.length > 0 ? (
           <>
             {userClasses.map((classItem) => (
               <Classcard 

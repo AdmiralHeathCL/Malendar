@@ -6,7 +6,7 @@ const MyInfoPage = () => {
   const { data: authUser, isLoading, error } = useQuery({
     queryKey: ["authUser"],
     queryFn: async () => {
-      const res = await fetch("/api/auth/user");
+      const res = await fetch("/api/auth/me");
       if (!res.ok) throw new Error("Failed to fetch user data");
       return res.json();
     },
@@ -15,30 +15,10 @@ const MyInfoPage = () => {
   if (isLoading) return <div>Loading user info...</div>;
   if (error) return <div>Error: {error.message}</div>;
 
-  const { username, usertype } = authUser;
+  const { username, usertype, profileImg } = authUser;
 
-  // Define the color pool for profile picture backgrounds
-  const colorPool = [
-    "#a8dadc", // Light teal
-    "#ff9f9f", // Light red
-    "#9acbff", // Light blue
-    "#ffcc88", // Light orange
-    "#f4e1a1", // Pale yellow
-    "#d8b7d1", // Light purple
-    "#d7b0f7", // Soft lavender
-    "#e5d1b4", // Light beige
-    "#a6c1e1", // Light sky blue
-    "#ffbdbd", // Light pink
-  ];
-
-  // Function to randomly pick a background color from the color pool
-  const generateBgColor = () => {
-    const randomIndex = Math.floor(Math.random() * colorPool.length);
-    return encodeURIComponent(colorPool[randomIndex]); // Ensure the color is URL-encoded
-  };
-
-  // Default profile image based on first letter of the username
-  const defaultProfileImg = `https://ui-avatars.com/api/?name=${username[0]}&background=${generateBgColor()}&color=fff&size=128`;
+  // Use profileImg for background color
+  const profileBgColor = profileImg || "#a8dadc";  // Fallback to a default color
 
   return (
     <div className="w-full p-8">
@@ -47,12 +27,13 @@ const MyInfoPage = () => {
       {/* User Info Section */}
       <div className="bg-base-200 p-6 rounded-lg shadow mb-3 flex items-center gap-6">
         {/* Profile Picture */}
-        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-300">
-          <img
-            src={defaultProfileImg} // Default profile image based on first letter and random background color
-            alt="Profile"
-            className="w-full h-full object-cover"
-          />
+        <div
+          className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-300"
+          style={{ backgroundColor: profileBgColor }}
+        >
+          <span className="text-white text-xl font-bold w-full h-full flex items-center justify-center">
+            {username[0]}
+          </span>
         </div>
 
         <div>
@@ -73,5 +54,6 @@ const MyInfoPage = () => {
     </div>
   );
 };
+
 
 export default MyInfoPage;

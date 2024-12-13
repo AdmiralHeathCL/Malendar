@@ -92,7 +92,7 @@ const ClassDetailPage = () => {
 
       if (!response.ok) throw new Error("Failed to add member to class");
 
-      toast.success("Member added");
+      toast.success("添加成功");
 
       // Update the members and non-members immediately
       const addedMember = nonMembers.find((user) => user._id === studentId);
@@ -118,7 +118,7 @@ const ClassDetailPage = () => {
 
       if (!response.ok) throw new Error("Failed to remove member from class");
 
-      toast.success("Member removed");
+      toast.success("移除成功");
 
       // Update the members and non-members immediately
       const removedMember = members.find((user) => user._id === studentId);
