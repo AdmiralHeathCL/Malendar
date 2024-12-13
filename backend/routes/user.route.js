@@ -1,5 +1,5 @@
 import express from "express";
-import { getallUsers, getAdmins, getTeachers, getStudents } from "../controllers/user.controller.js";
+import { getallUsers, getAdmins, getTeachers, getStudents} from "../controllers/user.controller.js";
 import { resetPassword } from "../controllers/user.controller.js";
 
 const router = express.Router();

@@ -1,10 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 
 const MyInfoPage = () => {
-  const [daysInMartz, setDaysInMartz] = useState(0);
-
   // Fetch authenticated user
   const { data: authUser, isLoading, error } = useQuery({
     queryKey: ["authUser"],
@@ -13,81 +10,65 @@ const MyInfoPage = () => {
       if (!res.ok) throw new Error("Failed to fetch user data");
       return res.json();
     },
-    onSuccess: (user) => {
-      if (user && user.registerDate) {
-        const registerDate = new Date(user.registerDate);
-        const today = new Date();
-        const diffTime = Math.abs(today - registerDate);
-        setDaysInMartz(Math.ceil(diffTime / (1000 * 60 * 60 * 24))); // Calculate days in Martz
-      }
-    },
   });
-
-  // Reset Password Mutation
-  const resetPassword = useMutation({
-    mutationFn: async (email) => {
-      const res = await fetch("/api/users/reset-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
-      if (!res.ok) throw new Error("Failed to reset password");
-      return res.json();
-    },
-    onSuccess: () => {
-      toast.success("Password reset email sent!");
-    },
-    onError: () => {
-      toast.error("Failed to reset password");
-    },
-  });
-
-  const handleResetPassword = () => {
-    const email = prompt("请输入您的邮箱地址以重置密码:");
-    if (email) {
-      resetPassword.mutate(email);
-    }
-  };
 
   if (isLoading) return <div>Loading user info...</div>;
   if (error) return <div>Error: {error.message}</div>;
 
   const { username, usertype } = authUser;
 
+  // Define the color pool for profile picture backgrounds
+  const colorPool = [
+    "#a8dadc", // Light teal
+    "#ff9f9f", // Light red
+    "#9acbff", // Light blue
+    "#ffcc88", // Light orange
+    "#f4e1a1", // Pale yellow
+    "#d8b7d1", // Light purple
+    "#d7b0f7", // Soft lavender
+    "#e5d1b4", // Light beige
+    "#a6c1e1", // Light sky blue
+    "#ffbdbd", // Light pink
+  ];
+
+  // Function to randomly pick a background color from the color pool
+  const generateBgColor = () => {
+    const randomIndex = Math.floor(Math.random() * colorPool.length);
+    return encodeURIComponent(colorPool[randomIndex]); // Ensure the color is URL-encoded
+  };
+
+  // Default profile image based on first letter of the username
+  const defaultProfileImg = `https://ui-avatars.com/api/?name=${username[0]}&background=${generateBgColor()}&color=fff&size=128`;
+
   return (
     <div className="w-full p-8">
       <h1 className="text-2xl font-bold mb-6">我的信息</h1>
 
       {/* User Info Section */}
-      <div className="bg-base-200 p-6 rounded-lg shadow mb-3">
-        <h2 className="text-xl font-semibold mb-4">用户信息</h2>
-        <p>
-          <strong>用户名:</strong> {username}
-        </p>
-        <p>
-          <strong>用户类型:</strong>{" "}
-          {usertype === "isAdmin"
-            ? "管理员"
-            : usertype === "isTeacher"
-            ? "教师"
-            : "学员"}
-        </p>
-        <p>
-          <strong>加入时间:</strong> 已加入 Martz {daysInMartz} 天
-        </p>
-      </div>
+      <div className="bg-base-200 p-6 rounded-lg shadow mb-3 flex items-center gap-6">
+        {/* Profile Picture */}
+        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-300">
+          <img
+            src={defaultProfileImg} // Default profile image based on first letter and random background color
+            alt="Profile"
+            className="w-full h-full object-cover"
+          />
+        </div>
 
-      {/* Account Security Section */}
-      <div className="bg-base-200 p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">账户安全</h2>
-        <button
-          className="btn btn-warning btn-sm mt-2"
-          onClick={handleResetPassword}
-        >
-          重置密码
-        </button>
+        <div>
+          <h2 className="text-xl font-semibold mb-4">用户信息</h2>
+          <p>
+            <strong>用户名:</strong> {username}
+          </p>
+          <p>
+            <strong>用户类型:</strong>{" "}
+            {usertype === "isAdmin"
+              ? "管理员"
+              : usertype === "isTeacher"
+              ? "教师"
+              : "学员"}
+          </p>
+        </div>
       </div>
     </div>
   );

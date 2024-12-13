@@ -176,12 +176,12 @@ const AdminCalendarPage = () => {
         });
         setClasses(sortedClasses);
 
-        toast.success("Classes saved successfully");
+        toast.success("修改成功");
       } else {
-        toast.error("Failed to delete existing classes");
+        toast.error("删除失败");
       }
     } catch (error) {
-      toast.error("Error saving changes");
+      toast.error("修改失败");
     }
   };
 
