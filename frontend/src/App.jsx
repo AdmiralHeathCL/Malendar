@@ -7,7 +7,7 @@ import AdminCalendarPage from "./pages/calendar/AdminCalendarPage";
 import MyclassPage from "./pages/myclass/MyclassPage";
 import ClassDetailPage from "./pages/myclass/ClassdetailPage";
 import CreateClassPage from "./pages/admin/CreateClassPage";
-import AllclassPage from "./pages/admin/AllClassPage";
+import AllclassPage from "./pages/admin/AllclassPage";
 import Navbar from "./components/common/Navbar";
 import AdminRoute from "./pages/admin/AdminRoute";
 import MyInfoPage from "./pages/auth/MyInfoPage";
