@@ -26,6 +26,10 @@ app.use("/api/users", userRoutes);
 app.use("/api/clusters", clusterRoutes);
 app.use("/api/inclasses", inclassRoutes);
 
+const staticPath = path.join(__dirname, "/frontend/dist");
+console.log("Serving static files from:", staticPath);
+app.use(express.static(staticPath));
+
 if(process.env.NODE_ENV === "production") {
     app.use(express.static(path.join(__dirname, "/frontend/dist")));
     app.get("*", (req, res) => {
